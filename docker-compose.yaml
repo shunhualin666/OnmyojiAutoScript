@@ -8,6 +8,6 @@ services:
         container_name: 'oas-env'
         image: 'oas-env'
         build:
-            context: ./deploy/docker/
-            dockerfile: ./Dockerfile
-            # dockerfile: ./Dockerfile
+            context: ./
+            dockerfile: deploy/docker/Dockerfile
+            # dockerfile: deploy/docker/Dockerfile
