@@ -378,7 +378,6 @@ async def annotator_frame_ws(websocket: WebSocket, session_id: str):
             frame = annotator_manager.latest_emulator_frame(session_id)
             if frame:
                 await websocket.send_bytes(frame)
-                # 限制帧推送频率，避免高频推送造成阻塞
                 await asyncio.sleep(0.1)
                 continue
 
