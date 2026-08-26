@@ -28,6 +28,16 @@ except ImportError:
         "Run: ./toolkit/python.exe -m pip install oas-checkin-biggod"
     )
 
+# 非 Windows 平台：oas-checkin-biggod 打包的是 Windows 版 adb.exe，
+# 改用系统 adb，避免在 Linux/macOS 容器中因 adb.exe 无法执行而失败
+if sys.platform != 'win32':
+    import shutil
+    _system_adb = shutil.which('adb')
+    if _system_adb:
+        ADB_PATH = _system_adb
+    else:
+        logger.warning('未找到系统 adb，将尝试使用包内 adb.exe')
+
 urllib3.disable_warnings()
 os.environ['MSYS_NO_PATHCONV'] = '1'
 
