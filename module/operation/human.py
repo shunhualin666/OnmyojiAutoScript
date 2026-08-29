@@ -274,16 +274,17 @@ class HumanPolicy(Policy):
             return 0.0
         return self.hick_rt()
 
-    def move_delay(self) -> float:
-        """分段滑动段间延迟（秒）。"""
-        if not self.enabled:
-            return 0.0
-        return self.move_delay_ms() / 1000.0
-
     def interval(self, base: float = 0.0) -> float:
-        """拟人化操作间隔（秒），对数正态 + AR(1) 负自相关 + 疲劳变慢。"""
+        """拟人化操作间隔（秒）：突发性基 + 对数正态抖动 + AR(1) 负自相关 + 疲劳。
+
+        Args:
+            base: 决策延时（秒，如 Hick 反应时间），作为间隔组成部分。
+        """
         if not self.enabled:
             return float(base)
+        # 两态突发性：active 密集(快) / idle 稀疏(慢)，决定本次间隔基
+        burst_dt, _ = self.burst_step()
+        # 对数正态抖动 + AR(1) 负自相关
         jitter = float(np.exp(self.rng.normal(self.lat_mu, self.lat_sigma))) / 1000.0
         jitter = float(np.clip(jitter, 0.03, 0.5))
         if self._last_interval is not None:
@@ -291,9 +292,9 @@ class HumanPolicy(Policy):
             jitter = mean + self.ar_alpha * (self._last_interval - mean) + jitter * self.ar_noise
         jitter = float(np.clip(jitter, 0.03, 0.5))
         self._last_interval = jitter
-        if base <= 0:
-            return jitter / self.fatigue_factor()
-        return float(np.clip((base * 0.6 + jitter * 0.4) / self.fatigue_factor(), 0.03, 0.6))
+        # 总间隔 = 突发基 + 决策延时 + 抖动；疲劳变慢
+        total = burst_dt + max(0.0, base) + jitter
+        return float(np.clip(total / self.fatigue_factor(), 0.05, 3.0))
 
     def burst_step(self) -> tuple[float, str]:
         """推进两态突发性，返回 (当前态基间隔, 状态名)。"""
@@ -318,8 +319,8 @@ class HumanPolicy(Policy):
         return int(self.rng.integers(lo, top + 1))
 
     def dwell_ms(self) -> int:
-        """按压停留时长（ms，triangular，lo<=peak<=hi）。"""
-        return int(round(float(self.rng.triangular(self.dwell_lo, self.dwell_peak, self.dwell_hi))))
+        """按压停留时长（ms）：截断对数正态按下时长（hold_time 接入）。"""
+        return int(round(self.hold_time('tap') * 1000))
 
     def micro_move_xy(self) -> tuple[int, int]:
         """点击微动偏移（px），钳制在 ±3σ 内（细微扰动不越界）。"""

@@ -63,9 +63,9 @@ class OperationLayer:
                 self.device.click(x, y, control_name=name)
         dt = perf_counter() - start
         self._record('click', region, (x, y), name)
-        # 策略节奏：推进疲劳 + 操作后停顿（拟人化决策延时/按压停留）
+        # 策略节奏：推进疲劳 + 操作后停顿（拟人化决策延时 + 间隔 + 突发性）
         self.policy.record(dt=dt)
-        self._pause(self.policy.after_click())
+        self._pause(self.policy.interval(self.policy.after_click()))
 
     def long_click(self, region, duration=None, name: str = 'LongClick') -> None:
         """区域内长按。"""
@@ -96,7 +96,7 @@ class OperationLayer:
             dt = perf_counter() - start
             self._record('swipe', (region_a, region_b), [p1, p2], name)
             self.policy.record(dt=dt)
-            self._pause(self.policy.after_swipe())
+            self._pause(self.policy.interval(self.policy.after_swipe()))
             return
         self._apply_screen()
         path = self.policy.path(region_a, region_b)
@@ -118,16 +118,24 @@ class OperationLayer:
             path = self._dense_path(path)
             phys = self.policy.physical()
             if phys:
+                move_delay_ms = phys['move_delay_ms']
+                # 菲茨定律滑动时长校准：期望总时长 / 点数 = 每点步进延迟
+                mt = getattr(self.policy, 'move_time', None)
+                if mt is not None and len(path) > 1:
+                    dist = float(np.hypot(path[-1][0] - path[0][0],
+                                          path[-1][1] - path[0][1]))
+                    total_ms = float(mt(dist)) * 1000
+                    move_delay_ms = int(round(np.clip(total_ms / len(path), 2, 50)))
                 self.device.swipe_trace(path, control_name=name,
                                         pressure=phys['pressure'],
-                                        move_delay=phys['move_delay_ms'])
+                                        move_delay=move_delay_ms)
             else:
                 self.device.swipe_trace(path, control_name=name)
         dt = perf_counter() - start
         self._record('swipe', (region_a, region_b), path, name)
         # 策略节奏：推进疲劳 + 滑动后决策延时
         self.policy.record(dt=dt)
-        self._pause(self.policy.after_swipe())
+        self._pause(self.policy.interval(self.policy.after_swipe()))
 
     @staticmethod
     def _dense_path(path, max_step: float = 8.0) -> list:
