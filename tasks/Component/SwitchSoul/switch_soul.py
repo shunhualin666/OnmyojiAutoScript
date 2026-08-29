@@ -10,7 +10,7 @@ from module.atom.ocr import RuleOcr
 from tasks.base_task import BaseTask
 from tasks.Component.SwitchSoul.assets import SwitchSoulAssets
 from module.logger import logger
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 def switch_parser(switch_str: str) -> tuple:
@@ -279,7 +279,7 @@ class SwitchSoul(BaseTask, SwitchSoulAssets):
         x1, y1 = target.coord()
         x, y = action.coord()
 
-        self.act.click(point_region(x, y1), name=target.name)
+        self.act.click(point_region_around(x, y1), name=target.name)
         return True
 
 

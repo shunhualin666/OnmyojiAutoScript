@@ -21,7 +21,7 @@ from module.exception import ScriptError
 from module.image.rpc import get_image_client
 from module.logger import logger
 from module.ocr.base_ocr import OcrMode
-from module.operation import OperationLayer, DefaultPolicy, HumanPolicy, AIPolicy, point_region, rule_region
+from module.operation import OperationLayer, DefaultPolicy, HumanPolicy, AIPolicy, point_region_around, rule_region
 from tasks.Component.Costume.costume_base import CostumeBase
 from tasks.Component.config_base import Time
 from tasks.GlobalGame.assets import GlobalGameAssets
@@ -627,7 +627,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
                 x1, y1, x2, y2 = target.swipe_pos(number=swipe_distance_ratio, after=swipe_down)
             else:
                 x1, y1, x2, y2 = target.swipe_pos(after=swipe_down)
-            self.act.swipe(point_region(x1, y1), point_region(x2, y2), name=target.name)
+            self.act.swipe(point_region_around(x1, y1), point_region_around(x2, y2), name=target.name)
             sleep(random.uniform(0.8, 1.3))  # 等待滑动完成, 待优化
         if appear:
             return result
@@ -648,7 +648,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         appear = self.list_find(target, name=target.array[0], max_swipe=max_swipe)
         if isinstance(appear, tuple) and interval:
             x, y = appear
-            self.act.click(point_region(x, y), name=target.name)
+            self.act.click(point_region_around(x, y), name=target.name)
             self.interval_timer[target.name].reset()
             return True
         return False

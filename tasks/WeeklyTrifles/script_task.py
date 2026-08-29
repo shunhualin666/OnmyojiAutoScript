@@ -12,7 +12,7 @@ from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_main, page_area_boss, page_secret_zones, page_summon, random_click
 from tasks.WeeklyTrifles.assets import WeeklyTriflesAssets
 from tasks.WeeklyTrifles.page import page_shikigami_share
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 class ScriptTask(GameUi, WeeklyTriflesAssets):
@@ -225,12 +225,12 @@ class ScriptTask(GameUi, WeeklyTriflesAssets):
             # 一次50票不超过限制且当前选择的是10票则切换50票
             if count + 50 < dest_num and selected_10:
                 logger.hr('Switch to 50 amulet')
-                self.act.click(point_region(x_50 - width_check // 2, y_check + height_check // 2, 1), name='Click_50')
+                self.act.click(point_region_around(x_50 - width_check // 2, y_check + height_check // 2, 1), name='Click_50')
                 self.device.click_record_clear()
             # 一次50票会超过限制且当前选择的是50票则切换10票
             if count + 50 >= dest_num and not selected_10:
                 logger.hr('Switch to 10 amulet')
-                self.act.click(point_region(x_10 - width_check // 2, y_check + height_check // 2, 1), name='Click_10')
+                self.act.click(point_region_around(x_10 - width_check // 2, y_check + height_check // 2, 1), name='Click_10')
                 self.device.click_record_clear()
         # 正常结束且还有票, 则执行一次退出
         exit_amulet()

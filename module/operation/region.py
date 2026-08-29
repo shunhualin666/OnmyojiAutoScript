@@ -49,9 +49,22 @@ def clip_to_region(region, px, py) -> Point:
     return int(min(max(px, x), x + w)), int(min(max(py, y), y + h))
 
 
-def point_region(x, y, radius: int = 3) -> Region:
-    """把单个坐标扩成一个小区域（供动态/计算坐标调用，避免直接传点）。"""
-    return (x - radius, y - radius, 2 * radius, 2 * radius)
+def point_region(x, y, w: int = 1, h: int = 1) -> Region:
+    """用左上角 (x, y) 和宽高 (w, h) 构造区域（ROI 语义）。
+
+    直接返回 (x, y, w, h)，不做坐标转换。
+    """
+    return int(x), int(y), int(w), int(h)
+
+
+def point_region_around(x, y, radius: int = 3) -> Region:
+    """以点 (x, y) 为中心扩成一个小区域（供动态/计算坐标点击）。
+
+    Args:
+        radius: 半径（px）；返回 (x-r, y-r, 2r, 2r)。
+    """
+    r = max(0, int(radius))
+    return int(x) - r, int(y) - r, 2 * r, 2 * r
 
 
 def rule_region(rule) -> Region:

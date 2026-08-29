@@ -22,7 +22,7 @@ from tasks.Dokan.assets import DokanAssets
 from tasks.Dokan.config import Dokan
 import tasks.Dokan.page as pages
 from tasks.GameUi.game_ui import GameUi
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 def position_offset(src, offset: tuple):
@@ -373,7 +373,7 @@ class ScriptTask(GameUi, SwitchSoul, GeneralBattle, DokanAssets):
                     self.screenshot()
                     if self.appear(self.I_CENTER_CHALLENGE):
                         return True
-                    self.act.click(point_region(x, y))
+                    self.act.click(point_region_around(x, y))
                     sleep(0.5)
             return False
 

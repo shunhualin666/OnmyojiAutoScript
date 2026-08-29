@@ -21,7 +21,7 @@ from tasks.KekkaiUtilize.utils import CardClass, target_to_card_class
 from tasks.Component.ReplaceShikigami.replace_shikigami import ReplaceShikigami
 from tasks.GameUi.page import page_main, page_guild
 from module.base.utils import point2str
-from module.operation import rule_region, point_region
+from module.operation import rule_region, point_region_around
 import random
 
 """ 结界蹭卡 """
@@ -568,7 +568,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
         p1 = (safe_pos_x, safe_pos_y)
         p2 = (safe_pos_x, safe_pos_y - 416)
         logger.info('Swipe %s -> %s, %sS ' % (point2str(*p1), point2str(*p2), duration))
-        self.act.swipe(point_region(*p1), point_region(*p2), name='SWIPE_ADB', duration=duration, method='adb')
+        self.act.swipe(point_region_around(*p1), point_region_around(*p2), name='SWIPE_ADB', duration=duration, method='adb')
 
         # self.swipe(self.S_U_UP, duration=1, wait_up_time=1)
         self.device.click_record_clear()

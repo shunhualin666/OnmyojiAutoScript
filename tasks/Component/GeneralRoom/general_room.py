@@ -12,7 +12,7 @@ from module.atom.image import RuleImage
 from tasks.base_task import BaseTask
 from module.logger import logger
 from module.base.timer import Timer
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 class GeneralRoom(BaseTask, GeneralRoomAssets):
@@ -148,6 +148,6 @@ class GeneralRoom(BaseTask, GeneralRoomAssets):
                 break
             if click_timer.reached():
                 click_timer.reset()
-                self.act.click(point_region(pos[0], pos[1], radius=5))
+                self.act.click(point_region_around(pos[0], pos[1], radius=5))
 
         return True

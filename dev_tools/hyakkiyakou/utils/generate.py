@@ -11,7 +11,7 @@ from module.daemon.benchmark import Benchmark
 from module.atom.swipe import RuleSwipe
 from module.atom.image import RuleImage
 from module.logger import logger
-from module.operation import point_region
+from module.operation import point_region_around
 
 from tasks.Script.config_device import ScreenshotMethod, ControlMethod
 from tasks.Hyakkiyakou.assets import HyakkiyakouAssets
@@ -64,8 +64,8 @@ class ScriptTask(Benchmark, HyakkiyakouAssets):
         self.screenshot()
         video.write(self.device.image)
         # 竖直方向在240-480之间随机滑动（统一走操作中间层）
-        self.act.swipe(point_region(640, 690 + randint(0, 28)),
-                       point_region(640 - 64, 690 + randint(0, 28)),
+        self.act.swipe(point_region_around(640, 690 + randint(0, 28)),
+                       point_region_around(640 - 64, 690 + randint(0, 28)),
                        name='GEN_SWIPE')
         sleep(0.05)
 

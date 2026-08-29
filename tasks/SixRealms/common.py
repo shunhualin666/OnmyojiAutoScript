@@ -8,7 +8,7 @@ from tasks.GameUi.navigator import GameUi
 from tasks.SixRealms.assets import SixRealmsAssets
 from typing import List, Optional, Callable
 import tasks.SixRealms.page as pages
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 class SixRealmsCommon(GameUi, SixRealmsAssets):
@@ -154,7 +154,7 @@ class SixRealmsCommon(GameUi, SixRealmsAssets):
                 x, y = skill_rule.front_center()
                 x -= random.randint(35, 60)
                 y += random.randint(-skill_rule.roi_front[3] // 2, skill_rule.roi_front[3] // 2)
-                self.act.click(point_region(x, y, 1), name=skill_rule.name)
+                self.act.click(point_region_around(x, y, 1), name=skill_rule.name)
                 buy_cnt += 1
                 continue
             if coin_num < skill_price + 100:

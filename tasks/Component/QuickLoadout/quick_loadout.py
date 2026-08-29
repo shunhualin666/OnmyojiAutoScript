@@ -23,7 +23,7 @@ from tasks.Component.QuickLoadout.config import (
 )
 from tasks.Component.SwitchSoul.assets import SwitchSoulAssets
 from tasks.base_task import BaseTask
-from module.operation import point_region
+from module.operation import point_region_around
 
 
 class QuickLoadoutOcr(RuleOcr):
@@ -297,7 +297,7 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
         panel_x, panel_y, _, _ = layout.panel
         if config.mode == QuickLoadoutMode.NUMBER:
             y = panel_y + self.GROUP_FIRST_Y + (config.group_number - 1) * self.GROUP_ROW_HEIGHT
-            self.act.click(point_region(panel_x + self.GROUP_CLICK_X, y, 1), name='QUICK_LOADOUT_GROUP')
+            self.act.click(point_region_around(panel_x + self.GROUP_CLICK_X, y, 1), name='QUICK_LOADOUT_GROUP')
             sleep(0.6)
             return True
 
@@ -309,7 +309,7 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
             current = tuple(result.ocr_text for result in results)
             y, score = self._find_name_y(layout.group_ocr, config.group_name, results)
             if y is not None and score >= 0.55:
-                self.act.click(point_region(panel_x + self.GROUP_CLICK_X, y, 1), name='QUICK_LOADOUT_GROUP_OCR')
+                self.act.click(point_region_around(panel_x + self.GROUP_CLICK_X, y, 1), name='QUICK_LOADOUT_GROUP_OCR')
                 sleep(0.6)
                 return True
             stable_count = stable_count + 1 if current and current == previous else 0
@@ -352,7 +352,7 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
 
     def _equip_quick_loadout_souls(self, layout: QuickLoadoutLayout, row_y: int) -> None:
         panel_x = layout.panel[0]
-        self.act.click(point_region(panel_x + self.PRESET_EQUIP_X, row_y, 1), name='QUICK_LOADOUT_EQUIP_SOUL')
+        self.act.click(point_region_around(panel_x + self.PRESET_EQUIP_X, row_y, 1), name='QUICK_LOADOUT_EQUIP_SOUL')
         timer = Timer(self.CONFIRM_TIMEOUT).start()
         while not timer.reached():
             self.screenshot()
@@ -365,7 +365,7 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
 
     def _deploy_quick_loadout(self, layout, fight_anchor, dismiss, row_y) -> bool:
         panel_x = layout.panel[0]
-        self.act.click(point_region(panel_x + self.PRESET_SELECT_X, row_y, 1), name='QUICK_LOADOUT_PRESET')
+        self.act.click(point_region_around(panel_x + self.PRESET_SELECT_X, row_y, 1), name='QUICK_LOADOUT_PRESET')
         sleep(0.4)
         self.click(fight_anchor)
         timer = Timer(self.PANEL_CLOSE_TIMEOUT).start()
