@@ -95,18 +95,8 @@ class HyaDevice(BaseTask):
             logger.warning('root_node unavailable, falling back to standard click')
             self.act.click(point_region(x, y))
             return
-        if control_method == ControlMethod.MINITOUCH:
-            try:
-                self.device.click_minitouch(x=x, y=y)
-            except AttributeError:
-                logger.warning('click_minitouch failed, falling back to standard click')
-                self.act.click(point_region(x, y))
-        else:
-            try:
-                self.device.click_window_message(x=x, y=y, fast=True)
-            except AttributeError:
-                logger.warning('click_window_message failed, falling back to standard click')
-                self.act.click(point_region(x, y))
+        # 统一走操作中间层（区域指令），不再直接调用设备底层方法
+        self.act.click(point_region(x, y))
 
     def set_fast_screenshot_interval(self, interval: float):
         """

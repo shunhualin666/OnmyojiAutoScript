@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from time import perf_counter, sleep
 
+from . import region as R
 from .policy import Policy, DefaultPolicy
 
 
@@ -59,12 +60,29 @@ class OperationLayer:
     # ------------------------------------------------------------------
     # 滑动
     # ------------------------------------------------------------------
-    def swipe(self, region_a, region_b, name: str = 'SWIPE') -> None:
+    def swipe(self, region_a, region_b, name: str = 'SWIPE',
+              duration=None, method: str | None = None) -> None:
         """从区域 A 滑到区域 B。
 
         轨迹由策略 path() 生成；多段轨迹时仅第一段计入防卡死，
         避免一次逻辑滑动被拆成多次 device 调用导致误判。
+
+        Args:
+            duration: 指定滑动时长（秒）；仅 method='adb' 时使用。
+            method: 'adb' 强制 adb 慢速精确滑动（忽略策略轨迹）；
+                None 用策略轨迹 + device.swipe。
         """
+        if method == 'adb':
+            # adb 慢速精确滑动（拖动列表/摇杆等场景），起终点取区域中心
+            p1 = self._clamp(*R.region_center(region_a))
+            p2 = self._clamp(*R.region_center(region_b))
+            start = perf_counter()
+            self.device.swipe_adb(p1=p1, p2=p2, duration=duration or (0.1, 0.2))
+            dt = perf_counter() - start
+            self._record('swipe', (region_a, region_b), [p1, p2], name)
+            self.policy.record(dt=dt)
+            self._pause(self.policy.after_swipe())
+            return
         self._apply_screen()
         path = self.policy.path(region_a, region_b)
         # 最终保险：轨迹所有点都不越出屏幕

@@ -802,7 +802,7 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, AbyssShadowsAssets):
         p1 = (197, 568)
         import random
         dx, dy = random.randint(-radius, radius), random.randint(-radius, radius)
-        self.device.swipe_adb(p1, (p1[0] + dx, p1[1] + dy), duration=0.5)
+        self.act.swipe(point_region(*p1), point_region(p1[0] + dx, p1[1] + dy), name='SWIPE_ADB', duration=0.5, method='adb')
         logger.info(f"Swipe {p1} to {(p1[0] + dx, p1[1] + dy)}")
 
     def get_next_dt(self, now: datetime, success: bool = False) -> datetime:
