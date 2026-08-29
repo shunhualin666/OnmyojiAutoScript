@@ -12,9 +12,11 @@ Point = tuple[int, int]
 
 
 def region_center(region) -> Point:
-    """区域中心。"""
+    """区域中心，钳制到区域内（保证退化/越界区域也返回合法点）。"""
     x, y, w, h = region
-    return int(x + w / 2), int(y + h / 2)
+    cx, cy = x + w / 2.0, y + h / 2.0
+    # 确保在区域内；w/h<=0（退化区域）时返回区域原点
+    return int(min(max(cx, x), x + w)), int(min(max(cy, y), y + h))
 
 
 def region_random(region, rng=None) -> Point:

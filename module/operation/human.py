@@ -167,8 +167,9 @@ class HumanPolicy(Policy):
     # ------------------------------------------------------------------
     def path(self, region_a, region_b) -> list[tuple[int, int]]:
         """区域 A -> 区域 B 的拟人轨迹点。"""
-        a = R.region_center(region_a)
-        b = R.region_center(region_b)
+        # 首尾 = 区域内合法点，并保证在屏幕内（不越界）
+        a = self._clip_screen(*R.region_center(region_a))
+        b = self._clip_screen(*R.region_center(region_b))
         t = np.linspace(0.0, 1.0, self.n_segments + 1)
         # 最小 jerk 五次多项式
         s = 10.0 * t ** 3 - 15.0 * t ** 4 + 6.0 * t ** 5
