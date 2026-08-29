@@ -6,7 +6,7 @@
 from .region import (
     Region, Point,
     region_center, region_random, region_normal,
-    region_contains, clip_to_region, point_region, point_region_around, rule_region,
+    region_contains, clip_to_region, point_region, rule_region,
 )
 from .policy import Policy, DefaultPolicy
 from .human import HumanPolicy
@@ -17,7 +17,7 @@ from .layer import OperationLayer
 __all__ = [
     'Region', 'Point',
     'region_center', 'region_random', 'region_normal',
-    'region_contains', 'clip_to_region', 'point_region', 'point_region_around', 'rule_region',
+    'region_contains', 'clip_to_region', 'point_region', 'rule_region',
     'Policy', 'DefaultPolicy', 'HumanPolicy', 'AIPolicy',
     'Recorder', 'OperationLayer',
 ]

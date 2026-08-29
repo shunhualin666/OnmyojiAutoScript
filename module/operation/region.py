@@ -57,16 +57,6 @@ def point_region(x, y, w: int = 1, h: int = 1) -> Region:
     return int(x), int(y), int(w), int(h)
 
 
-def point_region_around(x, y, radius: int = 3) -> Region:
-    """以点 (x, y) 为中心扩成一个小区域（供动态/计算坐标点击）。
-
-    Args:
-        radius: 半径（px）；返回 (x-r, y-r, 2r, 2r)。
-    """
-    r = max(0, int(radius))
-    return int(x) - r, int(y) - r, 2 * r, 2 * r
-
-
 def rule_region(rule) -> Region:
     """从规则对象取点击区域。
 

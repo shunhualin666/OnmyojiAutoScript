@@ -23,7 +23,7 @@ from tasks.Secret.script_task import ScriptTask as SecretScriptTask
 from tasks.WantedQuests.assets import WantedQuestsAssets
 from tasks.WantedQuests.config import CooperationType, CooperationSelectMask, WQInfo, WQType, WantedQuestsConfig
 from tasks.WantedQuests.explore import WQExplore, ExploreWantedBoss
-from module.operation import point_region_around
+from module.operation import point_region
 
 
 class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
@@ -217,7 +217,7 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
             # 根据邀请按钮位置生成 对应的点击位置 打开追踪界面
             # NOTE magic Number
 
-            self.act.click(point_region_around(btn.roi_front[0], btn.roi_front[1] - 40, 1), name=str(btn) + ' y-40')
+            self.act.click(point_region(btn.roi_front[0], btn.roi_front[1] - 40, 1), name=str(btn) + ' y-40')
             # 防止点击后界面来不及刷新
             sleep(1.5)
         # 关闭单个任务的追踪界面

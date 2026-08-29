@@ -7,7 +7,7 @@ from module.logger import logger
 from tasks.GameUi.assets import GameUiAssets
 from tasks.Restart.assets import RestartAssets
 from tasks.base_task import BaseTask
-from module.operation import point_region_around
+from module.operation import point_region
 
 
 class LoginService(BaseTask, RestartAssets, GameUiAssets):
@@ -107,7 +107,7 @@ class LoginService(BaseTask, RestartAssets, GameUiAssets):
                 raise GameStuckError('Appear create account')
             if self.appear(self.I_CHARACTARS, interval=1):
                 logger.info('误入区服设置')
-                self.act.click(point_region_around(106, 535, 1))
+                self.act.click(point_region(106, 535, 1))
                 continue
             if self.appear(self.I_EARLY_SERVER) and self.appear_then_click(self.I_EARLY_SERVER_CANCEL):
                 logger.info('Cancel switch from early server to normal server')

@@ -18,7 +18,7 @@ from tasks.EvoZone.assets import EvoZoneAssets
 from tasks.EvoZone.config import EvoZone, UserStatus, KirinType
 from module.logger import logger
 from module.exception import TaskEnd
-from module.operation import point_region_around
+from module.operation import point_region
 
 
 class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi, EvoZoneAssets, SwitchSoul):
@@ -112,7 +112,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
         """
         pos = self.list_find(self.L_LAYER_LIST, layer)
         if pos:
-            self.act.click(point_region_around(pos[0], pos[1]))
+            self.act.click(point_region(pos[0], pos[1]))
             return True
         return False
 

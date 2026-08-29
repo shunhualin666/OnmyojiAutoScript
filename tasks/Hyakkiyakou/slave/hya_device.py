@@ -10,7 +10,7 @@ from module.exception import RequestHumanTakeover, GameStuckError
 from tasks.base_task import BaseTask
 
 from tasks.Hyakkiyakou.config import ScreenshotMethod, ControlMethod
-from module.operation import point_region_around
+from module.operation import point_region
 
 def image_black(img) -> bool:
     for y, x in [(0, 0), (719, 1279), (719, 0), (0, 1279)]:
@@ -93,10 +93,10 @@ class HyaDevice(BaseTask):
         )
         if not hasattr(self.device, 'root_node'):
             logger.warning('root_node unavailable, falling back to standard click')
-            self.act.click(point_region_around(x, y))
+            self.act.click(point_region(x, y))
             return
         # 统一走操作中间层（区域指令），不再直接调用设备底层方法
-        self.act.click(point_region_around(x, y))
+        self.act.click(point_region(x, y))
 
     def set_fast_screenshot_interval(self, interval: float):
         """

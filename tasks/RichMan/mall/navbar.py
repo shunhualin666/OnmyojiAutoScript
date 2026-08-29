@@ -13,7 +13,7 @@ from tasks.GameUi.page import page_main, page_guild
 from tasks.GameUi.game_ui import GameUi
 from tasks.Component.Buy.buy import Buy
 from tasks.RichMan.assets import RichManAssets
-from module.operation import point_region_around
+from module.operation import point_region
 
 
 
@@ -74,7 +74,7 @@ class MallNavbar(GameUi, RichManAssets):
             if self.appear(check_rule):
                 return True
             if not interval_timer.started() or interval_timer.reached():
-                self.act.click(point_region_around(pos[0], pos[1]), name=control_name)
+                self.act.click(point_region(pos[0], pos[1]), name=control_name)
                 max_click_cnt -= 1
                 interval_timer.reset()
         return False

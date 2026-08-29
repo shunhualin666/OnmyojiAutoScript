@@ -23,7 +23,7 @@ from tasks.Orochi.config import UserStatus
 from module.exception import RequestHumanTakeover
 from tasks.GameUi.page import page_main, page_reward, page_soul_zones, page_shikigami_records
 from time import sleep
-from module.operation import point_region_around
+from module.operation import point_region
 
 class ScriptTask(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, SwitchSoul, EternitySeaAssets):
     """永生之海"""
@@ -243,7 +243,7 @@ class ScriptTask(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, SwitchSoul, 
         """
         pos = self.list_find(self.L_LAYER_LIST, layer)
         if pos:
-            self.act.click(point_region_around(pos[0], pos[1]))
+            self.act.click(point_region(pos[0], pos[1]))
             return True
         return False
 

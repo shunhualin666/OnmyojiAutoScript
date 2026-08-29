@@ -19,7 +19,7 @@ from module.atom.image_grid import ImageGrid
 from module.base.utils import point2str
 from module.base.timer import Timer
 from module.exception import GamePageUnknownError
-from module.operation import point_region_around
+from module.operation import point_region
 
 
 area_map = (
@@ -275,7 +275,7 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, RyouToppaAssets):
             p1 = (safe_pos_x, safe_pos_y)
             p2 = (safe_pos_x, safe_pos_y - 101)
             logger.info('Swipe %s -> %s, %s ' % (point2str(*p1), point2str(*p2), duration))
-            self.act.swipe(point_region_around(*p1), point_region_around(*p2), name='SWIPE_ADB', duration=duration, method='adb')
+            self.act.swipe(point_region(*p1), point_region(*p2), name='SWIPE_ADB', duration=duration, method='adb')
             time.sleep(2)
 
     def attack_area(self, index: int):
