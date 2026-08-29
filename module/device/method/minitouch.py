@@ -567,51 +567,75 @@ class Minitouch(Connection):
         self.minitouch_builder.clear()
 
     @retry
-    def click_minitouch(self, x, y):
+    def click_minitouch(self, x, y, pressure=None, dwell=None, micro_move=None):
+        """minitouch 点击，支持拟人化物理参数。
+
+        Args:
+            pressure: 按压压力（0~max_pressure）；None 用默认 100。
+            dwell: 按压停留时长（ms）；None 不额外停留。
+            micro_move: (dx, dy) 按下后微动偏移；None 不微动。
+        """
         builder = self.minitouch_builder
-        builder.down(x, y).commit()
+        pressure = int(pressure) if pressure else 100
+        dwell = int(dwell) if dwell else 0
+        if micro_move:
+            mx, my = int(x) + micro_move[0], int(y) + micro_move[1]
+        else:
+            mx, my = int(x), int(y)
+        builder.down(x, y, pressure=pressure).commit()
+        if dwell > 0:
+            builder.wait(dwell)
+        builder.move(mx, my, pressure=pressure).commit().wait(0)
         builder.up().commit()
         self.minitouch_send()
 
     @retry
-    def long_click_minitouch(self, x, y, duration=1.0):
+    def long_click_minitouch(self, x, y, duration=1.0, pressure=None):
+        """minitouch 长按，支持按压压力。"""
         duration = int(duration * 1000)
         builder = self.minitouch_builder
-        builder.down(x, y).commit().wait(duration)
+        pressure = int(pressure) if pressure else 100
+        builder.down(x, y, pressure=pressure).commit().wait(duration)
         builder.up().commit()
         self.minitouch_send()
 
     @retry
-    def swipe_minitouch(self, p1, p2):
+    def swipe_minitouch(self, p1, p2, pressure=None, move_delay=None):
+        """minitouch 滑动，支持按压压力与移动步间延迟。"""
         points = insert_swipe(p0=p1, p3=p2)
         builder = self.minitouch_builder
+        pressure = int(pressure) if pressure else 100
+        delay = int(move_delay) if move_delay else 10
 
-        builder.down(*points[0]).commit()
+        builder.down(*points[0], pressure=pressure).commit()
         self.minitouch_send()
 
         for point in points[1:]:
-            builder.move(*point).commit().wait(10)
+            builder.move(*point, pressure=pressure).commit().wait(delay)
         self.minitouch_send()
 
         builder.up().commit()
         self.minitouch_send()
 
     @retry
-    def drag_minitouch(self, p1, p2, point_random=(-10, -10, 10, 10)):
+    def drag_minitouch(self, p1, p2, point_random=(-10, -10, 10, 10), pressure=None, move_delay=None):
+        """minitouch 拖动，支持按压压力与移动步间延迟。"""
         p1 = np.array(p1) - random_rectangle_point(point_random)
         p2 = np.array(p2) - random_rectangle_point(point_random)
         points = insert_swipe(p0=p1, p3=p2, speed=20)
         builder = self.minitouch_builder
+        pressure = int(pressure) if pressure else 100
+        delay = int(move_delay) if move_delay else 10
 
-        builder.down(*points[0]).commit()
+        builder.down(*points[0], pressure=pressure).commit()
         self.minitouch_send()
 
         for point in points[1:]:
-            builder.move(*point).commit().wait(10)
+            builder.move(*point, pressure=pressure).commit().wait(delay)
         self.minitouch_send()
 
-        builder.move(*p2).commit().wait(140)
-        builder.move(*p2).commit().wait(140)
+        builder.move(*p2, pressure=pressure).commit().wait(140)
+        builder.move(*p2, pressure=pressure).commit().wait(140)
         self.minitouch_send()
 
         builder.up().commit()

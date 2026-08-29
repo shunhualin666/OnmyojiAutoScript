@@ -55,13 +55,17 @@ class Control(Minitouch, Adb, Scrcpy, Window):
             methods['window_message'] = self.long_click_window_message
         return methods
 
-    def click(self, x: int, y: int, control_check=True, control_name='Click') -> None:
+    def click(self, x: int, y: int, control_check=True, control_name='Click',
+              pressure=None, dwell=None, micro_move=None) -> None:
         """
 
         :param control_name:
         :param x:
         :param y:
         :param control_check:
+        :param pressure: 按压压力（仅 minitouch 生效）。
+        :param dwell: 按压停留 ms（仅 minitouch 生效）。
+        :param micro_move: (dx, dy) 按下微动（仅 minitouch 生效）。
         :return:
         """
         if control_check:
@@ -73,7 +77,10 @@ class Control(Minitouch, Adb, Scrcpy, Window):
             self.click_adb
         )
         start = time.perf_counter()
-        method(x, y)
+        if self.config.script.device.control_method == 'minitouch':
+            method(x, y, pressure=pressure, dwell=dwell, micro_move=micro_move)
+        else:
+            method(x, y)
         elapsed = time.perf_counter() - start
         logger.info(f'{self._format_action_duration(elapsed)}Click {point2str(x, y)} @ {control_name}')
 
@@ -96,13 +103,15 @@ class Control(Minitouch, Adb, Scrcpy, Window):
 
             self.click(button, control_check=False)
 
-    def long_click(self, x: int, y: int, duration=(0.5, 2), control_name='LongClick') -> None:
+    def long_click(self, x: int, y: int, duration=(0.5, 2), control_name='LongClick',
+                   pressure=None) -> None:
         """
 
         :param control_name:
         :param x:
         :param y:
         :param duration: 单位是s
+        :param pressure: 按压压力（仅 minitouch 生效）。
         :return:
         """
         self.handle_control_check(control_name)
@@ -115,11 +124,15 @@ class Control(Minitouch, Adb, Scrcpy, Window):
             self.config.script.device.control_method,
             self.long_click_adb)
         start = time.perf_counter()
-        method(x, y, duration)
+        if self.config.script.device.control_method == 'minitouch':
+            method(x, y, duration, pressure=pressure)
+        else:
+            method(x, y, duration)
         elapsed = time.perf_counter() - start
         logger.info(f'{self._format_action_duration(elapsed)}Click {point2str(x, y)} @ {control_name} {duration}')
 
-    def swipe(self, p1, p2, duration=(0.1, 0.2), control_name='SWIPE', distance_check=True):
+    def swipe(self, p1, p2, duration=(0.1, 0.2), control_name='SWIPE', distance_check=True,
+              pressure=None, move_delay=None):
         self.handle_control_check(control_name)
         p1, p2 = ensure_int(p1, p2)
         duration = ensure_time(duration)
@@ -157,7 +170,7 @@ class Control(Minitouch, Adb, Scrcpy, Window):
         self._invalidate_image_batch_cache()
         start = time.perf_counter()
         if method == 'minitouch':
-            self.swipe_minitouch(p1, p2)
+            self.swipe_minitouch(p1, p2, pressure=pressure, move_delay=move_delay)
         elif method == 'window_message':
             self.swipe_window_message(p1, p2)
         elif method == 'uiautomator2':

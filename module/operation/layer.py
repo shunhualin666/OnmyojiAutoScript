@@ -42,11 +42,23 @@ class OperationLayer:
         x, y = self.policy.aim(region)
         # 最终保险：任何策略产出的落点都不越出屏幕
         x, y = self._clamp(x, y)
+        phys = self.policy.physical()
         start = perf_counter()
-        if long_click:
-            self.device.long_click(x, y, duration=duration, control_name=name)
+        if phys:
+            # 注入拟人化物理参数（压力/停留/微动）
+            if long_click:
+                self.device.long_click(x, y, duration=duration, control_name=name,
+                                       pressure=phys.get('pressure'))
+            else:
+                self.device.click(x, y, control_name=name,
+                                  pressure=phys.get('pressure'),
+                                  dwell=phys.get('dwell_ms'),
+                                  micro_move=phys.get('micro_move'))
         else:
-            self.device.click(x, y, control_name=name)
+            if long_click:
+                self.device.long_click(x, y, duration=duration, control_name=name)
+            else:
+                self.device.click(x, y, control_name=name)
         dt = perf_counter() - start
         self._record('click', region, (x, y), name)
         # 策略节奏：推进疲劳 + 操作后停顿（拟人化决策延时/按压停留）
@@ -90,14 +102,29 @@ class OperationLayer:
         start = perf_counter()
         if len(path) <= 2:
             p1, p2 = path[0], path[-1]
-            self.device.swipe(p1=p1, p2=p2, control_name=name)
+            phys = self.policy.physical()
+            if phys:
+                self.device.swipe(p1=p1, p2=p2, control_name=name,
+                                  pressure=phys.get('pressure'),
+                                  move_delay=phys.get('move_delay_ms'))
+            else:
+                self.device.swipe(p1=p1, p2=p2, control_name=name)
         else:
             delay = max(0.0, self.policy.move_delay())
+            phys = self.policy.physical()
             for idx in range(len(path) - 1):
-                self.device.swipe(
-                    p1=path[idx], p2=path[idx + 1], control_name=name,
-                    control_check=(idx == 0),
-                )
+                if phys:
+                    self.device.swipe(
+                        p1=path[idx], p2=path[idx + 1], control_name=name,
+                        control_check=(idx == 0),
+                        pressure=phys.get('pressure'),
+                        move_delay=phys.get('move_delay_ms'),
+                    )
+                else:
+                    self.device.swipe(
+                        p1=path[idx], p2=path[idx + 1], control_name=name,
+                        control_check=(idx == 0),
+                    )
                 # 拟人化段间延迟（模拟连续滑动的移动时间）
                 if idx < len(path) - 2 and delay > 0:
                     sleep(delay)

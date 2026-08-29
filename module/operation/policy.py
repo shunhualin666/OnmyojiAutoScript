@@ -50,6 +50,10 @@ class Policy:
         """记录一次操作耗时（推进疲劳/学习）。"""
         pass
 
+    def physical(self) -> dict | None:
+        """本次操作的物理参数（压力/停留/微动等）；返回 None 则不注入设备。"""
+        return None
+
 
 class DefaultPolicy(Policy):
     """默认策略：与现状行为完全一致。

@@ -239,10 +239,10 @@ class HumanPolicy(Policy):
     # 操作节奏钩子（OperationLayer 调用）
     # ------------------------------------------------------------------
     def after_click(self) -> float:
-        """点击后停顿（秒）：按压停留 + 决策延时。"""
+        """点击后停顿（秒）：决策延时（按压停留已由设备注入承担，不重复）。"""
         if not self.enabled:
             return 0.0
-        return self.dwell_ms() / 1000.0 + self.hick_rt()
+        return self.hick_rt()
 
     def after_swipe(self) -> float:
         """滑动后停顿（秒）：决策延时。"""
