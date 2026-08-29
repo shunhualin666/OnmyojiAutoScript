@@ -39,6 +39,8 @@ class OperationLayer:
             duration: 长按时长（秒）；None 用设备默认。
         """
         x, y = self.policy.aim(region)
+        # 最终保险：任何策略产出的落点都不越出屏幕
+        x, y = self._clamp(x, y)
         start = perf_counter()
         if long_click:
             self.device.long_click(x, y, duration=duration, control_name=name)
@@ -63,7 +65,10 @@ class OperationLayer:
         轨迹由策略 path() 生成；多段轨迹时仅第一段计入防卡死，
         避免一次逻辑滑动被拆成多次 device 调用导致误判。
         """
+        self._apply_screen()
         path = self.policy.path(region_a, region_b)
+        # 最终保险：轨迹所有点都不越出屏幕
+        path = [self._clamp(px, py) for px, py in path]
         start = perf_counter()
         if len(path) <= 2:
             p1, p2 = path[0], path[-1]
@@ -97,6 +102,36 @@ class OperationLayer:
         """按策略要求的停顿等待（秒）；<=0 不等待。"""
         if seconds and seconds > 0:
             sleep(seconds)
+
+    # ------------------------------------------------------------------
+    # 屏幕边界（不越界保障）
+    # ------------------------------------------------------------------
+    def _screen(self) -> tuple[int, int] | None:
+        """从设备当前截图取屏幕尺寸 (宽, 高)；无则 None。"""
+        try:
+            img = getattr(self.device, 'image', None)
+            if img is not None:
+                h, w = img.shape[:2]
+                return (int(w), int(h))
+        except Exception:
+            pass
+        return None
+
+    def _apply_screen(self) -> None:
+        """把当前屏幕尺寸同步给策略（拟人化据此钳制坐标不越界）。"""
+        setter = getattr(self.policy, 'set_screen', None)
+        if setter is not None:
+            screen = self._screen()
+            if screen is not None:
+                setter(*screen)
+
+    def _clamp(self, px, py) -> tuple[int, int]:
+        """把点钳制到屏幕边界内（最终保险）。"""
+        screen = self._screen()
+        if screen is None:
+            return int(px), int(py)
+        w, h = screen
+        return (int(min(max(px, 0), w - 1)), int(min(max(py, 0), h - 1)))
 
     # ------------------------------------------------------------------
     # 策略切换

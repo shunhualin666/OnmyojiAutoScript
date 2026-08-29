@@ -36,10 +36,13 @@ class HumanPolicy(Policy):
     name = 'human'
 
     def __init__(self, seed: int | None = None, n_segments: int = 6,
-                 enabled: bool = True) -> None:
+                 enabled: bool = True,
+                 screen: tuple[int, int] | None = None) -> None:
         self.enabled = bool(enabled)
         self.rng = np.random.default_rng(seed)
         self.n_segments = int(n_segments)
+        # 屏幕边界 (宽, 高)；非空时所有拟人化坐标被钳制在屏幕内（不越界）
+        self.screen = screen
 
         # ---- 落点散布（点击不总在中心）----
         self.sigma_jitter = self.rng.uniform(0.5, 2.5)      # 手抖 px（Harris & Wolpert 1998）
@@ -106,6 +109,17 @@ class HumanPolicy(Policy):
         digest = hashlib.sha256(str(name).encode('utf-8')).hexdigest()
         return int(digest[:8], 16)
 
+    def set_screen(self, width: int, height: int) -> None:
+        """设置屏幕边界；此后所有拟人化坐标都不越界。"""
+        self.screen = (int(width), int(height))
+
+    def _clip_screen(self, px: float, py: float) -> tuple[int, int]:
+        """把点钳制到屏幕边界内（不越界）。"""
+        if self.screen is None:
+            return int(round(px)), int(round(py))
+        w, h = self.screen
+        return (int(min(max(px, 0), w - 1)), int(min(max(py, 0), h - 1)))
+
     # ------------------------------------------------------------------
     # 疲劳 / 漂移
     # ------------------------------------------------------------------
@@ -144,8 +158,9 @@ class HumanPolicy(Policy):
         py += self.rng.normal(0.0, self.sigma_jitter * self.spread_factor())
         # 低频漂移
         dx, dy = self.drift()
-        # 落点一定在区域内
-        return R.clip_to_region(region, px + dx, py + dy)
+        # 落点一定在区域内，再钳制到屏幕内（不越界）
+        px, py = R.clip_to_region(region, px + dx, py + dy)
+        return self._clip_screen(px, py)
 
     # ------------------------------------------------------------------
     # 轨迹（最小 jerk + 弯曲 + 抖动，首尾固定，过滤短段）
@@ -172,7 +187,8 @@ class HumanPolicy(Policy):
         path = [(int(round(px + bx + jx)), int(round(py + by + jy)))
                 for (px, py), (bx, by), (jx, jy) in
                 zip(path, bend, self.rng.normal(0.0, jitter, (len(path), 2)))]
-        # 首尾严格固定
+        # 中间点全部钳制到屏幕内（不越界），首尾严格固定
+        path = [self._clip_screen(px, py) for px, py in path]
         path[0] = a
         path[-1] = b
         # 过滤 <10px 短段（避免被 device distance_check 当作点击丢弃），末段强制到终点
