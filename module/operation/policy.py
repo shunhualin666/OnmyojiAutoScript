@@ -27,6 +27,29 @@ class Policy:
         """一次动作的时长（秒）；返回 None 使用设备默认。"""
         return None
 
+    # ------------------------------------------------------------------
+    # 节奏钩子（默认零开销；拟人化策略覆盖）
+    # ------------------------------------------------------------------
+    def after_click(self) -> float:
+        """点击后停顿（秒）。"""
+        return 0.0
+
+    def after_swipe(self) -> float:
+        """滑动后停顿（秒）。"""
+        return 0.0
+
+    def move_delay(self) -> float:
+        """分段滑动段间延迟（秒）。"""
+        return 0.0
+
+    def interval(self, base: float = 0.0) -> float:
+        """拟人化操作间隔（秒）。"""
+        return float(base)
+
+    def record(self, dt: float = 0.0) -> None:
+        """记录一次操作耗时（推进疲劳/学习）。"""
+        pass
+
 
 class DefaultPolicy(Policy):
     """默认策略：与现状行为完全一致。

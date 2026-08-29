@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+from time import perf_counter, sleep
+
 from .policy import Policy, DefaultPolicy
 
 
@@ -37,11 +39,16 @@ class OperationLayer:
             duration: 长按时长（秒）；None 用设备默认。
         """
         x, y = self.policy.aim(region)
+        start = perf_counter()
         if long_click:
             self.device.long_click(x, y, duration=duration, control_name=name)
         else:
             self.device.click(x, y, control_name=name)
+        dt = perf_counter() - start
         self._record('click', region, (x, y), name)
+        # 策略节奏：推进疲劳 + 操作后停顿（拟人化决策延时/按压停留）
+        self.policy.record(dt=dt)
+        self._pause(self.policy.after_click())
 
     def long_click(self, region, duration=None, name: str = 'LongClick') -> None:
         """区域内长按。"""
@@ -57,24 +64,39 @@ class OperationLayer:
         避免一次逻辑滑动被拆成多次 device 调用导致误判。
         """
         path = self.policy.path(region_a, region_b)
+        start = perf_counter()
         if len(path) <= 2:
             p1, p2 = path[0], path[-1]
             self.device.swipe(p1=p1, p2=p2, control_name=name)
         else:
+            delay = max(0.0, self.policy.move_delay())
             for idx in range(len(path) - 1):
                 self.device.swipe(
                     p1=path[idx], p2=path[idx + 1], control_name=name,
                     control_check=(idx == 0),
                 )
+                # 拟人化段间延迟（模拟连续滑动的移动时间）
+                if idx < len(path) - 2 and delay > 0:
+                    sleep(delay)
+        dt = perf_counter() - start
         self._record('swipe', (region_a, region_b), path, name)
+        # 策略节奏：推进疲劳 + 滑动后决策延时
+        self.policy.record(dt=dt)
+        self._pause(self.policy.after_swipe())
 
     # ------------------------------------------------------------------
-    # 记录
+    # 记录 / 节奏
     # ------------------------------------------------------------------
     def _record(self, kind: str, region, decision, name: str) -> None:
         if self.recorder is not None:
             self.recorder.record(kind=kind, region=region,
                                  decision=decision, name=name)
+
+    @staticmethod
+    def _pause(seconds: float) -> None:
+        """按策略要求的停顿等待（秒）；<=0 不等待。"""
+        if seconds and seconds > 0:
+            sleep(seconds)
 
     # ------------------------------------------------------------------
     # 策略切换

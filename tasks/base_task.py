@@ -21,7 +21,7 @@ from module.exception import ScriptError
 from module.image.rpc import get_image_client
 from module.logger import logger
 from module.ocr.base_ocr import OcrMode
-from module.operation import OperationLayer, DefaultPolicy, point_region, rule_region
+from module.operation import OperationLayer, DefaultPolicy, HumanPolicy, AIPolicy, point_region, rule_region
 from tasks.Component.Costume.costume_base import CostumeBase
 from tasks.Component.config_base import Time
 from tasks.GlobalGame.assets import GlobalGameAssets
@@ -40,6 +40,10 @@ class BaseTask(GlobalGameAssets, CostumeBase):
     limit_time: timedelta = None  # 限制运行的时间，是软时间，不是硬时间
     limit_count: int = None  # 限制运行的次数
     current_count: int = None  # 当前运行的次数
+
+    # 操作策略：default（现状一致）| human（拟人化）| ai（AI 占位）
+    # None = 跟随配置 operation.policy；设置具体值可显式覆写（如强制关闭拟人化）
+    operation_policy: str | None = None
 
     def __init__(self, config: Config, device: Device) -> None:
         """
@@ -62,8 +66,32 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         # 战斗次数相关
         self.current_count = 0  # 战斗次数
 
-        # 操作中间层：区域指令 -> 策略 -> 设备执行（默认策略，行为与现状一致）
-        self.act = OperationLayer(self.device, policy=DefaultPolicy())
+        # 操作中间层：区域指令 -> 策略 -> 设备执行（配置驱动，可覆写）
+        self.act = OperationLayer(self.device, policy=self._make_operation_policy())
+
+    def _make_operation_policy(self):
+        """按配置/类属性创建操作策略（default | human | ai）。
+
+        优先级：类属性 operation_policy（显式设置）> 配置 operation.policy > default。
+        拟人化策略用配置名派生个体签名（同账号固定、跨账号独立）。
+        """
+        name = getattr(self, 'operation_policy', None)
+        cfg = getattr(self.config, 'operation', None)
+        cfg_name = getattr(cfg, 'policy', None) if cfg is not None else None
+        if name:
+            policy_name = name
+        elif cfg_name:
+            policy_name = cfg_name
+        else:
+            policy_name = 'default'
+        if policy_name == 'human':
+            return HumanPolicy(
+                seed=HumanPolicy.seed_from_name(
+                    getattr(self.config, 'config_name', '')),
+            )
+        if policy_name == 'ai':
+            return AIPolicy()
+        return DefaultPolicy()
 
     def _burst(self) -> bool:
         """
