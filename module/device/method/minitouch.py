@@ -570,60 +570,49 @@ class Minitouch(Connection):
     def click_minitouch(self, x, y, pressure=None, dwell=None, micro_move=None):
         """minitouch 点击，执行策略层下发的物理参数。
 
-        Args:
-            pressure: 按压压力（0~max_pressure）；None 用 minitouch 原生默认。
-            dwell: 按压停留时长（ms）；None 不额外停留。
-            micro_move: (dx, dy) 按下后微动偏移；None 不微动。
+        最后防线：参数缺失（None）时兜底到 minitouch 原生默认，
+        保证任何调用都不出错；正常路径（拟人化启用）策略层保证传入有效值，兜底不可达。
         """
         builder = self.minitouch_builder
+        pressure = int(pressure) if pressure is not None else 100
+        dwell = int(dwell) if dwell is not None else 0
         if micro_move:
             mx, my = int(x) + micro_move[0], int(y) + micro_move[1]
         else:
             mx, my = int(x), int(y)
-        if pressure is not None:
-            builder.down(x, y, pressure=pressure).commit()
-        else:
-            builder.down(x, y).commit()
-        if dwell:
-            builder.wait(int(dwell))
-        if pressure is not None:
-            builder.move(mx, my, pressure=pressure).commit()
-        else:
-            builder.move(mx, my).commit()
+        builder.down(x, y, pressure=pressure).commit()
+        if dwell > 0:
+            builder.wait(dwell)
+        builder.move(mx, my, pressure=pressure).commit()
         builder.up().commit()
         self.minitouch_send()
 
     @retry
     def long_click_minitouch(self, x, y, duration=1.0, pressure=None):
-        """minitouch 长按，执行策略层下发的按压压力。"""
+        """minitouch 长按，执行策略层下发的按压压力（None 兜底到原生默认 100）。"""
         duration = int(duration * 1000)
         builder = self.minitouch_builder
-        if pressure is not None:
-            builder.down(x, y, pressure=pressure).commit().wait(duration)
-        else:
-            builder.down(x, y).commit().wait(duration)
+        pressure = int(pressure) if pressure is not None else 100
+        builder.down(x, y, pressure=pressure).commit().wait(duration)
         builder.up().commit()
         self.minitouch_send()
 
     @retry
     def swipe_minitouch(self, p1, p2, pressure=None, move_delay=None):
-        """minitouch 滑动，执行策略层下发的按压压力与移动步间延迟。"""
+        """minitouch 滑动，执行策略层下发的按压压力与移动步间延迟。
+
+        最后防线：参数缺失（None）时兜底（压力 100 / 步间延迟 10ms）。
+        """
         points = insert_swipe(p0=p1, p3=p2)
         builder = self.minitouch_builder
+        pressure = int(pressure) if pressure is not None else 100
+        delay = int(move_delay) if move_delay is not None else 10
 
-        if pressure is not None:
-            builder.down(*points[0], pressure=pressure).commit()
-        else:
-            builder.down(*points[0]).commit()
+        builder.down(*points[0], pressure=pressure).commit()
         self.minitouch_send()
 
         for point in points[1:]:
-            if pressure is not None:
-                builder.move(*point, pressure=pressure).commit()
-            else:
-                builder.move(*point).commit()
-            # 移动步间延迟：策略层下发；None 用 minitouch 原生步间延迟
-            builder.wait(move_delay if move_delay is not None else 10)
+            builder.move(*point, pressure=pressure).commit().wait(delay)
         self.minitouch_send()
 
         builder.up().commit()
@@ -631,33 +620,26 @@ class Minitouch(Connection):
 
     @retry
     def drag_minitouch(self, p1, p2, point_random=(-10, -10, 10, 10), pressure=None, move_delay=None):
-        """minitouch 拖动，执行策略层下发的按压压力与移动步间延迟。"""
+        """minitouch 拖动，执行策略层下发的按压压力与移动步间延迟。
+
+        最后防线：参数缺失（None）时兜底（压力 100 / 步间延迟 10ms）。
+        """
         p1 = np.array(p1) - random_rectangle_point(point_random)
         p2 = np.array(p2) - random_rectangle_point(point_random)
         points = insert_swipe(p0=p1, p3=p2, speed=20)
         builder = self.minitouch_builder
+        pressure = int(pressure) if pressure is not None else 100
+        delay = int(move_delay) if move_delay is not None else 10
 
-        if pressure is not None:
-            builder.down(*points[0], pressure=pressure).commit()
-        else:
-            builder.down(*points[0]).commit()
+        builder.down(*points[0], pressure=pressure).commit()
         self.minitouch_send()
 
         for point in points[1:]:
-            if pressure is not None:
-                builder.move(*point, pressure=pressure).commit()
-            else:
-                builder.move(*point).commit()
-            # 移动步间延迟：策略层下发；None 用 minitouch 原生步间延迟
-            builder.wait(move_delay if move_delay is not None else 10)
+            builder.move(*point, pressure=pressure).commit().wait(delay)
         self.minitouch_send()
 
-        if pressure is not None:
-            builder.move(*p2, pressure=pressure).commit().wait(140)
-            builder.move(*p2, pressure=pressure).commit().wait(140)
-        else:
-            builder.move(*p2).commit().wait(140)
-            builder.move(*p2).commit().wait(140)
+        builder.move(*p2, pressure=pressure).commit().wait(140)
+        builder.move(*p2, pressure=pressure).commit().wait(140)
         self.minitouch_send()
 
         builder.up().commit()

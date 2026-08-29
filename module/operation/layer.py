@@ -45,15 +45,16 @@ class OperationLayer:
         phys = self.policy.physical()
         start = perf_counter()
         if phys:
-            # 注入拟人化物理参数（压力/停留/微动）
+            # 注入拟人化物理参数。直接索引保证策略给全字段，
+            # 字段缺失立即报错（fail fast），绝不静默传 None 触发设备层兜底。
             if long_click:
                 self.device.long_click(x, y, duration=duration, control_name=name,
-                                       pressure=phys.get('pressure'))
+                                       pressure=phys['pressure'])
             else:
                 self.device.click(x, y, control_name=name,
-                                  pressure=phys.get('pressure'),
-                                  dwell=phys.get('dwell_ms'),
-                                  micro_move=phys.get('micro_move'))
+                                  pressure=phys['pressure'],
+                                  dwell=phys['dwell_ms'],
+                                  micro_move=phys['micro_move'])
         else:
             if long_click:
                 self.device.long_click(x, y, duration=duration, control_name=name)
@@ -105,8 +106,8 @@ class OperationLayer:
             phys = self.policy.physical()
             if phys:
                 self.device.swipe(p1=p1, p2=p2, control_name=name,
-                                  pressure=phys.get('pressure'),
-                                  move_delay=phys.get('move_delay_ms'))
+                                  pressure=phys['pressure'],
+                                  move_delay=phys['move_delay_ms'])
             else:
                 self.device.swipe(p1=p1, p2=p2, control_name=name)
         else:
@@ -117,8 +118,8 @@ class OperationLayer:
                     self.device.swipe(
                         p1=path[idx], p2=path[idx + 1], control_name=name,
                         control_check=(idx == 0),
-                        pressure=phys.get('pressure'),
-                        move_delay=phys.get('move_delay_ms'),
+                        pressure=phys['pressure'],
+                        move_delay=phys['move_delay_ms'],
                     )
                 else:
                     self.device.swipe(

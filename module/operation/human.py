@@ -306,8 +306,14 @@ class HumanPolicy(Policy):
         """滑动移动步间延迟（ms）。"""
         return int(round(float(self.rng.uniform(self.move_delay_lo, self.move_delay_hi))))
 
-    def physical(self) -> dict:
-        """本次操作的物理参数快照（供记录/AI 学习）。"""
+    def physical(self) -> dict | None:
+        """本次操作的物理参数快照。
+
+        策略启用时返回全字段有效值（供设备注入），保证设备层兜底不可达；
+        禁用时返回 None，退化为默认行为（此时才由设备层兜底）。
+        """
+        if not self.enabled:
+            return None
         return {
             'pressure': self.pressure(),
             'dwell_ms': self.dwell_ms(),
