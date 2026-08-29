@@ -158,17 +158,6 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         self.device.screenshot()
         # 判断勾协
         self._burst()
-
-        # # 判断网络异常
-        # if self.appear(self.I_NETWORK_ABNORMAL):
-        #     logger.warning(f"Network abnormal")
-        #     raise GameStuckError
-        #
-        # # 判断网络错误
-        # if self.appear(self.I_NETWORK_ERROR):
-        #     logger.warning(f"Network error")
-        #     raise GameStuckError
-
         return self.device.image
 
     def maybe_screenshot(self, soft_skip: bool = False):
@@ -647,8 +636,11 @@ class BaseTask(GlobalGameAssets, CostumeBase):
                 return False
         appear = self.list_find(target, name=target.array[0], max_swipe=max_swipe)
         if isinstance(appear, tuple) and interval:
-            x, y = appear
-            self.act.click(point_region(x, y), name=target.name)
+            # image 列表返回点击区域(4 元素)；ocr 列表返回坐标(2 元素)
+            if len(appear) == 4:
+                self.act.click(appear, name=target.name)
+            else:
+                self.act.click(point_region(*appear), name=target.name)
             self.interval_timer[target.name].reset()
             return True
         return False

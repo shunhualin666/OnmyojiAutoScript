@@ -143,13 +143,15 @@ class RuleList:
         判断是否出现了某个图片
         :param image: 屏幕的截图
         :param name:
-        :return: 如果在当前的显示中，返回可以点击的坐标.如果不是出现就是返回False
+        :return: 如果在当前的显示中，返回可以点击的区域 (x, y, w, h)；
+                 如果没出现则返回 False
         """
         if self.is_image and isinstance(name, str):
             self.target_check(name)
             appear = self._target.match(image, frame_id=frame_id)
             if appear:
-                return self._target.coord()
+                # 返回点击区域：match 后 roi_front 已更新为目标实际位置
+                return tuple(self._target.roi_front)
             else:
                 return False
         elif self.is_image and isinstance(name, list):
@@ -162,7 +164,8 @@ class RuleList:
             )
             for rule, result in zip(rules, results):
                 if rule._apply_match_result(result):
-                    return rule.coord()
+                    # 返回点击区域：匹配后 roi_front 为目标实际位置
+                    return tuple(rule.roi_front)
             return False
 
         else:
