@@ -213,14 +213,22 @@ class Control(Minitouch, Adb, Scrcpy, Window):
         self.swipe(p1, p2, duration=duration, control_name=name, distance_check=distance_check)
 
     def drag(self, p1, p2, segments=1, shake=(0, 15), point_random=(-10, -10, 10, 10), shake_random=(-5, -5, 5, 5),
-             swipe_duration=0.25, shake_duration=0.1, name='DRAG'):
+             swipe_duration=0.25, shake_duration=0.1, name='DRAG',
+             pressure=None, move_delay=None):
+        """拖拽，minitouch 下透传拟人化物理参数（与 click/swipe 一致）。
+
+        Args:
+            pressure: 按压压力（仅 minitouch 生效）。
+            move_delay: 移动步间延迟 ms（仅 minitouch 生效）。
+        """
         self.handle_control_check(name)
         p1, p2 = ensure_int(p1, p2)
         drag_log = 'Drag %s -> %s' % (point2str(*p1), point2str(*p2))
-        method = self.config.script.emulator.control_method
+        method = self.config.script.device.control_method
         start = time.perf_counter()
         if method == 'minitouch':
-            self.drag_minitouch(p1, p2, point_random=point_random)
+            self.drag_minitouch(p1, p2, point_random=point_random,
+                                pressure=pressure, move_delay=move_delay)
         elif method == 'uiautomator2':
             self.drag_uiautomator2(
                 p1, p2, segments=segments, shake=shake, point_random=point_random, shake_random=shake_random,
