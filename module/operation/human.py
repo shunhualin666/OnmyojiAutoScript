@@ -146,13 +146,18 @@ class HumanPolicy(Policy):
     def aim(self, region) -> tuple[int, int]:
         """区域内拟人落点：两成分对准 + 手抖 + 低频漂移，截断在区域内。"""
         cx, cy = R.region_center(region)
-        s = (self.w_e / 4.133) * self.spread_factor()
+        x, y, w, h = region
+        # 落点散布与目标尺寸相关（菲茨定律：目标越大越随意），
+        # σ ≈ 宽度/6（中心多、边缘少的正态散布）；w_e/4.133 作为最小散布下限
+        sigma_x = max(self.w_e / 4.133, w / 6.0)
+        sigma_y = max(self.w_e / 4.133, h / 6.0)
+        s = max(sigma_x, sigma_y) * self.spread_factor()
         px = cx + self.rng.normal(0.0, s)
         py = cy + self.rng.normal(0.0, s)
-        # 修正亚运动：30% 概率更贴近目标中心
-        if self.rng.random() < 0.3:
-            px = cx + self.rng.normal(0.0, s * 0.3)
-            py = cy + self.rng.normal(0.0, s * 0.3)
+        # 修正亚运动：25% 概率产生修正对准，更贴近中心但不过分集中
+        if self.rng.random() < 0.25:
+            px = cx + self.rng.normal(0.0, s * 0.5)
+            py = cy + self.rng.normal(0.0, s * 0.5)
         # 手抖
         px += self.rng.normal(0.0, self.sigma_jitter * self.spread_factor())
         py += self.rng.normal(0.0, self.sigma_jitter * self.spread_factor())
