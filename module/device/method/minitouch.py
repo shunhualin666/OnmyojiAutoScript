@@ -627,6 +627,28 @@ class Minitouch(Connection):
         self.minitouch_send()
 
     @retry
+    def swipe_trace_minitouch(self, points, pressure=None, move_delay=None):
+        """沿给定点序列滑动（单次触摸 down->move*->up），拟人连续拖动。
+
+        Args:
+            points: 轨迹点序列 [(x1,y1), (x2,y2), ...]；首点为按下点，末点为抬起点。
+            pressure: 按压压力（None 兜底到 minitouch 默认）。
+            move_delay: 移动步间延迟 ms（None 用默认 10）。
+        """
+        if len(points) < 2:
+            return
+        builder = self.minitouch_builder
+        pressure = self._clamp_pressure(pressure)
+        delay = int(move_delay) if move_delay is not None else 10
+        builder.down(*points[0], pressure=pressure).commit()
+        self.minitouch_send()
+        for point in points[1:]:
+            builder.move(*point, pressure=pressure).commit().wait(delay)
+        self.minitouch_send()
+        builder.up().commit()
+        self.minitouch_send()
+
+    @retry
     def drag_minitouch(self, p1, p2, point_random=(-10, -10, 10, 10), pressure=None, move_delay=None):
         """minitouch 拖动，执行策略层下发的按压压力与移动步间延迟。
 

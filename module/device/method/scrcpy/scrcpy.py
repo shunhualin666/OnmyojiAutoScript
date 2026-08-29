@@ -129,6 +129,22 @@ class Scrcpy(ScrcpyCore, Uiautomator2):
             self.sleep(0.05)
 
     @retry
+    def swipe_trace_scrcpy(self, points):
+        """沿给定点序列滑动（单次触摸连续 move），拟人连续拖动。"""
+        if len(points) < 2:
+            return
+        self.scrcpy_ensure_running()
+
+        with self._scrcpy_control_socket_lock:
+            self._scrcpy_control.touch(*points[0], const.ACTION_DOWN)
+            for point in points[1:-1]:
+                self._scrcpy_control.touch(*point, const.ACTION_MOVE)
+                self.sleep(0.002)
+            self._scrcpy_control.touch(*points[-1], const.ACTION_MOVE)
+            self._scrcpy_control.touch(*points[-1], const.ACTION_UP)
+            self.sleep(0.05)
+
+    @retry
     def drag_scrcpy(self, p1, p2, point_random=(-10, -10, 10, 10)):
         self.scrcpy_ensure_running()
 

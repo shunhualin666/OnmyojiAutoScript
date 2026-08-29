@@ -191,6 +191,32 @@ class Control(Minitouch, Adb, Scrcpy, Window):
         elapsed = time.perf_counter() - start
         logger.info(f'{self._format_action_duration(elapsed)}{swipe_log}')
 
+    def swipe_trace(self, points, control_name='SWIPE', control_check=True,
+                    pressure=None, move_delay=None):
+        """沿给定点序列滑动（单次连续触摸），用于拟人化轨迹。
+
+        仅 minitouch/scrcpy 支持多点连续触摸；其他方法退化为起终点滑动。
+        """
+        if control_check:
+            self.handle_control_check(control_name)
+        points = [ensure_int(p) for p in points]
+        if len(points) < 2:
+            return
+        self._invalidate_image_batch_cache()
+        method = self.config.script.device.control_method
+        start = time.perf_counter()
+        if method == 'minitouch':
+            self.swipe_trace_minitouch(points, pressure=pressure, move_delay=move_delay)
+        elif method == 'scrcpy':
+            self.swipe_trace_scrcpy(points)
+        else:
+            # 不支持多点连续触摸：退化为起终点滑动
+            self.swipe(points[0], points[-1], control_name=control_name,
+                       control_check=False, pressure=pressure, move_delay=move_delay)
+        elapsed = time.perf_counter() - start
+        logger.info(f'{self._format_action_duration(elapsed)}SwipeTrace '
+                    f'{point2str(*points[0])} -> {point2str(*points[-1])} @ {control_name}')
+
     def swipe_vector(self, vector, box=(123, 159, 1175, 628), random_range=(0, 0, 0, 0), padding=15,
                      duration=(0.1, 0.2), whitelist_area=None, blacklist_area=None, name='SWIPE', distance_check=True):
         """Method to swipe.

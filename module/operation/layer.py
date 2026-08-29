@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import numpy as np
 from time import perf_counter, sleep
 
 from . import region as R
@@ -77,13 +78,14 @@ class OperationLayer:
               duration=None, method: str | None = None) -> None:
         """从区域 A 滑到区域 B。
 
-        轨迹由策略 path() 生成；多段轨迹时仅第一段计入防卡死，
-        避免一次逻辑滑动被拆成多次 device 调用导致误判。
+        轨迹由策略 path() 生成。多段轨迹时加密为密集点，
+        以单次连续触摸（swipe_trace）下发——拟人滑动必须是一次
+        down->move*->up，拆成多次独立短滑会顿挫不拟人。
 
         Args:
             duration: 指定滑动时长（秒）；仅 method='adb' 时使用。
             method: 'adb' 强制 adb 慢速精确滑动（忽略策略轨迹）；
-                None 用策略轨迹 + device.swipe。
+                None 用策略轨迹 + device.swipe/swipe_trace。
         """
         if method == 'adb':
             # adb 慢速精确滑动（拖动列表/摇杆等场景），起终点取区域中心
@@ -111,29 +113,34 @@ class OperationLayer:
             else:
                 self.device.swipe(p1=p1, p2=p2, control_name=name)
         else:
-            delay = max(0.0, self.policy.move_delay())
+            # 拟人化连续拖动：轨迹加密后单次触摸下发（down->move*->up），
+            # 不再拆成多次独立短滑（否则不丝滑、不拟人）
+            path = self._dense_path(path)
             phys = self.policy.physical()
-            for idx in range(len(path) - 1):
-                if phys:
-                    self.device.swipe(
-                        p1=path[idx], p2=path[idx + 1], control_name=name,
-                        control_check=(idx == 0),
-                        pressure=phys['pressure'],
-                        move_delay=phys['move_delay_ms'],
-                    )
-                else:
-                    self.device.swipe(
-                        p1=path[idx], p2=path[idx + 1], control_name=name,
-                        control_check=(idx == 0),
-                    )
-                # 拟人化段间延迟（模拟连续滑动的移动时间）
-                if idx < len(path) - 2 and delay > 0:
-                    sleep(delay)
+            if phys:
+                self.device.swipe_trace(path, control_name=name,
+                                        pressure=phys['pressure'],
+                                        move_delay=phys['move_delay_ms'])
+            else:
+                self.device.swipe_trace(path, control_name=name)
         dt = perf_counter() - start
         self._record('swipe', (region_a, region_b), path, name)
         # 策略节奏：推进疲劳 + 滑动后决策延时
         self.policy.record(dt=dt)
         self._pause(self.policy.after_swipe())
+
+    @staticmethod
+    def _dense_path(path, max_step: float = 8.0) -> list:
+        """把轨迹点插值加密，相邻点间距 <= max_step（单次触摸更丝滑）。"""
+        dense = [path[0]]
+        for p0, p1 in zip(path, path[1:]):
+            d = float(np.hypot(p1[0] - p0[0], p1[1] - p0[1]))
+            n = max(1, int(np.ceil(d / max_step)))
+            for i in range(1, n + 1):
+                t = i / n
+                dense.append((int(round(p0[0] + (p1[0] - p0[0]) * t)),
+                              int(round(p0[1] + (p1[1] - p0[1]) * t))))
+        return dense
 
     # ------------------------------------------------------------------
     # 记录 / 节奏
