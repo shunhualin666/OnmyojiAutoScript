@@ -417,8 +417,7 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
             if select_area is None:
                 logger.info('Current page no exact friend')
                 return False
-            click_x, click_y = self._random_point_in_area(select_area)
-            self.device.click(x=click_x, y=click_y, control_name=rule.name)
+            self.act.click(select_area, name=rule.name)
             if self._wait_selected_appear(pre_cnt):
                 return True
         logger.warning(f'Find friend "{name}" but failed to select')

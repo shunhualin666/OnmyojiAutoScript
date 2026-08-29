@@ -21,6 +21,7 @@ from module.exception import ScriptError
 from module.image.rpc import get_image_client
 from module.logger import logger
 from module.ocr.base_ocr import OcrMode
+from module.operation import OperationLayer, DefaultPolicy, point_region, rule_region
 from tasks.Component.Costume.costume_base import CostumeBase
 from tasks.Component.config_base import Time
 from tasks.GlobalGame.assets import GlobalGameAssets
@@ -60,6 +61,9 @@ class BaseTask(GlobalGameAssets, CostumeBase):
 
         # 战斗次数相关
         self.current_count = 0  # 战斗次数
+
+        # 操作中间层：区域指令 -> 策略 -> 设备执行（默认策略，行为与现状一致）
+        self.act = OperationLayer(self.device, policy=DefaultPolicy())
 
     def _burst(self) -> bool:
         """
@@ -243,18 +247,19 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         """
         appear = self.appear(target, interval=interval, threshold=threshold)
         if appear and not action:
-            x, y = target.coord()
-            self.device.click(x, y, control_name=target.name)
+            # 区域指令：不直接操纵坐标，落点由中间层策略决定
+            self.act.click(rule_region(target), name=target.name)
 
         elif appear and action:
-            x, y = action.coord()
             if isinstance(action, RuleLongClick):
                 if duration is None:
-                    self.device.long_click(x, y, duration=action.duration / 1000, control_name=target.name)
+                    self.act.click(rule_region(action), name=target.name,
+                                   long_click=True, duration=action.duration / 1000)
                 else:
-                    self.device.long_click(x, y, duration=duration / 1000, control_name=target.name)
+                    self.act.click(rule_region(action), name=target.name,
+                                   long_click=True, duration=duration / 1000)
             elif isinstance(action, RuleClick):
-                self.device.click(x, y, control_name=target.name)
+                self.act.click(rule_region(action), name=target.name)
 
         return appear
 
@@ -299,13 +304,14 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         """
         if not self.wait_until_appear(target, wait_time):
             return False
-        click_x, click_y = target.coord()
+        # 区域指令：不直接操纵坐标，落点由中间层策略决定
         if action is None:
-            self.device.click(click_x, click_y, control_name=target.name)
+            self.act.click(rule_region(target), name=target.name)
         elif isinstance(action, RuleLongClick):
-            self.device.long_click(click_x, click_y, duration=action.duration / 1000, control_name=target.name)
+            self.act.click(rule_region(target), name=target.name,
+                           long_click=True, duration=action.duration / 1000)
         elif isinstance(action, RuleClick):
-            self.device.click(click_x, click_y, control_name=target.name)
+            self.act.click(rule_region(target), name=target.name)
         return True
 
     def wait_until_disappear(self, target: RuleImage) -> None:
@@ -448,8 +454,8 @@ class BaseTask(GlobalGameAssets, CostumeBase):
             if not self.interval_timer[swipe.name].reached():
                 return False
 
-        x1, y1, x2, y2 = swipe.coord()
-        self.device.swipe(p1=(x1, y1), p2=(x2, y2), control_name=swipe.name)
+        # 区域指令：不直接操纵坐标，起终点区域由中间层策略决定
+        self.act.swipe(rule_region(swipe), swipe.roi_back, name=swipe.name)
 
         # 执行后，如果有限制时间，则重置限制时间
         if interval:
@@ -479,11 +485,11 @@ class BaseTask(GlobalGameAssets, CostumeBase):
             if not self.interval_timer[click.name].reached():
                 return False
 
-        x, y = click.coord()
         if isinstance(click, RuleLongClick):
-            self.device.long_click(x=x, y=y, duration=click.duration / 1000, control_name=click.name)
+            self.act.click(rule_region(click), name=click.name,
+                           long_click=True, duration=click.duration / 1000)
         elif isinstance(click, RuleClick) or isinstance(click, RuleImage) or isinstance(click, RuleOcr):
-            self.device.click(x=x, y=y, control_name=click.name)
+            self.act.click(rule_region(click), name=click.name)
 
         # 执行后，如果有限制时间，则重置限制时间
         if interval:
@@ -555,11 +561,9 @@ class BaseTask(GlobalGameAssets, CostumeBase):
             return False
 
         if action:
-            x, y = action.coord()
             self.click(action, interval)
         else:
-            x, y = target.coord()
-            self.device.click(x=x, y=y, control_name=target.name)
+            self.act.click(rule_region(target), name=target.name)
         return True
 
     def list_find(self, target: RuleList, name: str | list[str], max_swipe: int = 10) -> bool | tuple:
@@ -595,7 +599,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
                 x1, y1, x2, y2 = target.swipe_pos(number=swipe_distance_ratio, after=swipe_down)
             else:
                 x1, y1, x2, y2 = target.swipe_pos(after=swipe_down)
-            self.device.swipe(p1=(x1, y1), p2=(x2, y2))
+            self.act.swipe(point_region(x1, y1), point_region(x2, y2), name=target.name)
             sleep(random.uniform(0.8, 1.3))  # 等待滑动完成, 待优化
         if appear:
             return result
@@ -616,7 +620,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         appear = self.list_find(target, name=target.array[0], max_swipe=max_swipe)
         if isinstance(appear, tuple) and interval:
             x, y = appear
-            self.device.click(x, y)
+            self.act.click(point_region(x, y), name=target.name)
             self.interval_timer[target.name].reset()
             return True
         return False

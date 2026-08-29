@@ -22,6 +22,7 @@ from module.logger import logger
 from module.exception import TaskEnd
 from module.base.timer import Timer
 from tasks.DailyTrifles.config import SummonType
+from module.operation import rule_region
 import re
 from typing import Any, Optional, List, Callable
 
@@ -95,8 +96,7 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
                 sleep(1)
                 self.goto_page(page_summon)
                 self.appear_then_click(self.I_UI_BACK_RED, interval=1)
-                x, y = list[i].coord()
-                self.device.click(x, y)
+                self.act.click(rule_region(list[i]))
                 sleep(1)
                 self.screenshot()
                 if self.appear(self.I_RECALL_TICKET):

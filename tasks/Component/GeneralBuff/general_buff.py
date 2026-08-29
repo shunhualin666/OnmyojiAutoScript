@@ -9,6 +9,7 @@ from module.atom.image import RuleImage
 from tasks.base_task import BaseTask
 from module.logger import logger
 from typing import Optional
+from module.operation import point_region
 
 
 class GeneralBuff(BaseTask, GeneralBuffAssets):
@@ -142,7 +143,7 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
             if area:
                 self.set_switch_area(area)
             if not area or (not self.appear(self.I_CLOSE_RED) and not self.appear(self.I_OPEN_YELLOW)):
-                self.device.swipe(p2=(530, 240), p1=(580, 320))
+                self.act.swipe(point_region(580, 320), point_region(530, 240), name='BUFF_SWIPE')
                 max_swipe -= 1
                 time.sleep(1)
                 continue
@@ -172,7 +173,7 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
             if area:
                 self.set_switch_area(area)
             if not area or (not self.appear(self.I_CLOSE_RED) and not self.appear(self.I_OPEN_YELLOW)):
-                self.device.swipe(p2=(530, 240), p1=(580, 320))
+                self.act.swipe(point_region(580, 320), point_region(530, 240), name='BUFF_SWIPE')
                 max_swipe -= 1
                 time.sleep(1)
                 continue

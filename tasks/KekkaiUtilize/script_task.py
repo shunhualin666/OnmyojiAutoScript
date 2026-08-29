@@ -21,6 +21,7 @@ from tasks.KekkaiUtilize.utils import CardClass, target_to_card_class
 from tasks.Component.ReplaceShikigami.replace_shikigami import ReplaceShikigami
 from tasks.GameUi.page import page_main, page_guild
 from module.base.utils import point2str
+from module.operation import rule_region
 import random
 
 """ 结界蹭卡 """
@@ -297,8 +298,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
                 break
             if timer_click.reached():
                 timer_click.reset()
-                x, y = check_image.coord()
-                self.device.click(x=x, y=y, control_name=check_image.name)
+                self.act.click(rule_region(check_image), name=check_image.name)
         if friend == SelectFriendList.DIFFERENT_SERVER:
             time.sleep(1)
         time.sleep(0.5)

@@ -27,6 +27,7 @@ from tasks.GameUi.matcher import Matcher, ensure_matcher
 from tasks.GameUi.navigator import GameUi
 from tasks.GameUi.page import page_battle, page_battle_prepare, page_battle_result, page_reward
 from tasks.GameUi.page_definition import Page
+from module.operation import point_region
 
 # 战斗结束后用于确认“已经回到任务自身页面”的识别条件。
 # 推荐优先复用调用方战后原本就会 `wait_until_appear(...)` 的稳定特征。
@@ -929,7 +930,7 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
                 break
         if self.appear_then_click(self.I_LOCAL):
             time.sleep(0.3)
-        self.device.click(x, y)
+        self.act.click(point_region(x, y))
 
     def green_mark_name(self, name: str = ''):
         if name == '':
@@ -950,7 +951,7 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
                     best = {'name': ret.ocr_text, 'x': x, 'y': y, 'similarity': similarity}
             if best['similarity'] > 0.5:
                 logger.info(f'Green name success, text: {best["name"]}[{best["similarity"]:.2f}]')
-                self.device.click(best['x'], best['y'], control_name=best['name'])
+                self.act.click(point_region(best['x'], best['y']), name=best['name'])
                 return
         logger.warning(f'Green name failed, best text: {best["name"]}[{best["similarity"]:.2f}]')
 

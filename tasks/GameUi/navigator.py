@@ -31,6 +31,7 @@ from tasks.GameUi.registry import PageRegistry
 from tasks.GameUi.session import NavigatorSession
 from tasks.SixRealms.assets import SixRealmsAssets
 from tasks.base_task import BaseTask
+from module.operation import rule_region
 
 
 class GameUi(BaseTask, GameUiAssets):
@@ -345,8 +346,7 @@ class GameUi(BaseTask, GameUiAssets):
         if isinstance(action, RuleClick):
             if interval is not None:
                 return self.click(action, interval=interval)
-            x, y = action.coord()
-            self.device.click(x=x, y=y, control_name=action.name)
+            self.act.click(rule_region(action), name=action.name)
             return True
         return False
 

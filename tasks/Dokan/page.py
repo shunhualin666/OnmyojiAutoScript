@@ -5,6 +5,7 @@ from tasks.GameUi.default_pages import (page_shirin, page_shikigami_records, pag
 from tasks.GameUi.matcher import any_of
 from tasks.GameUi.page_definition import Page
 from tasks.GlobalGame.assets import GlobalGameAssets
+from module.operation import point_region
 
 # 道馆地图页面
 page_dokan_map = Page(any_of(DokanAssets.I_RYOU_DOKAN_FOUND_DOKAN, DokanAssets.I_RYOU_DOKAN_FINDING_DOKAN))
@@ -22,7 +23,7 @@ def map_enter_dokan(task) -> bool:
         if pos != (0, 0, 0, 0):
             x = pos[0] + pos[2] / 2  # 取中间
             y = pos[1] - 20  # 往上偏移20
-            task.device.click(x=x, y=y, control_name='dokan_map_goto_dokan')
+            task.act.click(point_region(x, y), name='dokan_map_goto_dokan')
         try_count += 1
     return False
 

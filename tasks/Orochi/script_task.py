@@ -19,6 +19,7 @@ from tasks.TrueOrochi.assets import TrueOrochiAssets
 from module.logger import logger
 from module.exception import TaskEnd
 from tasks.Orochi.page import page_orochi
+from module.operation import point_region
 
 
 class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi, SwitchSoul, OrochiAssets, TrueOrochiAssets):
@@ -110,7 +111,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
         """
         pos = self.list_find(self.L_LAYER_LIST, layer)
         if pos:
-            self.device.click(x=pos[0], y=pos[1], control_name=f'LAYER_{layer}')
+            self.act.click(point_region(pos[0], pos[1]), name=f'LAYER_{layer}')
             return True
         return False
 

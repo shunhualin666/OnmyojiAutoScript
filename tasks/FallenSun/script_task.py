@@ -16,6 +16,7 @@ from tasks.FallenSun.assets import FallenSunAssets
 from tasks.FallenSun.config import FallenSun, UserStatus
 from module.logger import logger
 from module.exception import TaskEnd
+from module.operation import point_region
 
 
 class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi, SwitchSoul, FallenSunAssets):
@@ -82,7 +83,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
         """
         pos = self.list_find(self.L_LAYER_LIST, layer)
         if pos:
-            self.device.click(x=pos[0], y=pos[1])
+            self.act.click(point_region(pos[0], pos[1]))
             return True
 
     def check_lock(self, lock: bool = True) -> bool:
