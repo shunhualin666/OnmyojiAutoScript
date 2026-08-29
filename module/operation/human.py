@@ -35,7 +35,7 @@ class HumanPolicy(Policy):
 
     name = 'human'
 
-    def __init__(self, seed: int | None = None, n_segments: int = 6,
+    def __init__(self, seed: int | None = None, n_segments: int = 10,
                  enabled: bool = True,
                  screen: tuple[int, int] | None = None) -> None:
         self.enabled = bool(enabled)
