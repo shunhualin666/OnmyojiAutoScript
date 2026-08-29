@@ -173,24 +173,37 @@ class HumanPolicy(Policy):
         return self._clip_screen(px, py)
 
     # ------------------------------------------------------------------
-    # 轨迹（最小 jerk + 弯曲 + 抖动，首尾固定，过滤短段）
+    # 轨迹（最小 jerk + 弯曲 + 抖动，首尾固定，过滤短段，段数随机）
     # ------------------------------------------------------------------
+    def _pick_segments(self, dist: float = 0.0) -> int:
+        """本次滑动的随机段数：个体基准 ± 随机，距离远略多。
+
+        固定采样段数会被检测为机器特征；每次滑动在基准附近随机，
+        长距离略多段，配合轨迹加密后采样密度每次不同。
+        """
+        base = self.n_segments + int(round(max(0.0, dist) / 300.0))
+        lo = max(3, base - 2)
+        hi = base + 3
+        return int(self.rng.integers(lo, hi + 1))
+
     def path(self, region_a, region_b) -> list[tuple[int, int]]:
-        """区域 A -> 区域 B 的拟人轨迹点。"""
+        """区域 A -> 区域 B 的拟人轨迹点（段数每次随机）。"""
         # 首尾 = 区域内合法点，并保证在屏幕内（不越界）
         a = self._clip_screen(*R.region_center(region_a))
         b = self._clip_screen(*R.region_center(region_b))
-        t = np.linspace(0.0, 1.0, self.n_segments + 1)
+        delta = np.array([b[0] - a[0], b[1] - a[1]], dtype=float)
+        dist = float(np.linalg.norm(delta))
+        # 本次随机段数（采样密度不固定，更难检测）
+        n = self._pick_segments(dist)
+        t = np.linspace(0.0, 1.0, n + 1)
         # 最小 jerk 五次多项式
         s = 10.0 * t ** 3 - 15.0 * t ** 4 + 6.0 * t ** 5
         path = [(int(round(a[0] + (b[0] - a[0]) * si)),
                  int(round(a[1] + (b[1] - a[1]) * si))) for si in s]
         # 垂直方向随机弯曲（中段最大）
-        delta = np.array([b[0] - a[0], b[1] - a[1]], dtype=float)
         normal = np.array([-delta[1], delta[0]], dtype=float)
         nl = float(np.linalg.norm(normal)) + 1e-9
         normal = normal / nl
-        dist = float(np.linalg.norm(delta))
         envelope = np.sin(np.pi * t)[:, None]
         # 弯曲幅度有界：最多偏移 30% 距离（扰动在范围内）
         bend_std = self.curve_bias * dist
