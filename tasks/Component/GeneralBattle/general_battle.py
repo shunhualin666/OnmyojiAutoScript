@@ -27,7 +27,7 @@ from tasks.GameUi.matcher import Matcher, ensure_matcher
 from tasks.GameUi.navigator import GameUi
 from tasks.GameUi.page import page_battle, page_battle_prepare, page_battle_result, page_reward
 from tasks.GameUi.page_definition import Page
-from module.operation import point_region
+from module.operation import point_region, rule_region
 
 # 战斗结束后用于确认“已经回到任务自身页面”的识别条件。
 # 推荐优先复用调用方战后原本就会 `wait_until_appear(...)` 的稳定特征。
@@ -904,25 +904,25 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
         self.device.screenshot_interval_set('combat')
 
     def green_mark_choose(self, mark_mode: GreenMarkType = GreenMarkType.GREEN_MAIN):
-        x, y = None, None
+        rule = None
         match mark_mode:
             case GreenMarkType.GREEN_LEFT1:
-                x, y = self.C_GREEN_LEFT_1.coord()
+                rule = self.C_GREEN_LEFT_1
                 logger.info("Green left 1")
             case GreenMarkType.GREEN_LEFT2:
-                x, y = self.C_GREEN_LEFT_2.coord()
+                rule = self.C_GREEN_LEFT_2
                 logger.info("Green left 2")
             case GreenMarkType.GREEN_LEFT3:
-                x, y = self.C_GREEN_LEFT_3.coord()
+                rule = self.C_GREEN_LEFT_3
                 logger.info("Green left 3")
             case GreenMarkType.GREEN_LEFT4:
-                x, y = self.C_GREEN_LEFT_4.coord()
+                rule = self.C_GREEN_LEFT_4
                 logger.info("Green left 4")
             case GreenMarkType.GREEN_LEFT5:
-                x, y = self.C_GREEN_LEFT_5.coord()
+                rule = self.C_GREEN_LEFT_5
                 logger.info("Green left 5")
             case GreenMarkType.GREEN_MAIN:
-                x, y = self.C_GREEN_MAIN.coord()
+                rule = self.C_GREEN_MAIN
                 logger.info("Green main")
         while True:
             self.screenshot()
@@ -930,7 +930,8 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
                 break
         if self.appear_then_click(self.I_LOCAL):
             time.sleep(0.3)
-        self.act.click(point_region(x, y))
+        # 直接用规则区域（不取 coord 单点再包区域）
+        self.act.click(rule_region(rule))
 
     def green_mark_name(self, name: str = ''):
         if name == '':
