@@ -72,7 +72,8 @@ class BaseTask(GlobalGameAssets, CostumeBase):
     def _make_operation_policy(self):
         """按配置/类属性创建操作策略（default | human | ai）。
 
-        优先级：类属性 operation_policy（显式设置）> 配置 operation.policy > default。
+        优先级：类属性 operation_policy（显式设置）> 配置 operation.policy > 默认 human。
+        默认启用拟人化；显式设置 'default' 可回退到零拟人化。
         拟人化策略用配置名派生个体签名（同账号固定、跨账号独立）。
         """
         name = getattr(self, 'operation_policy', None)
@@ -83,7 +84,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         elif cfg_name:
             policy_name = cfg_name
         else:
-            policy_name = 'default'
+            policy_name = 'human'
         if policy_name == 'human':
             return HumanPolicy(
                 seed=HumanPolicy.seed_from_name(
