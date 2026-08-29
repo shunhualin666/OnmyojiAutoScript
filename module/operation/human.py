@@ -55,9 +55,9 @@ class HumanPolicy(Policy):
         self.curve_bias = self.rng.uniform(0.05, 0.30)      # 垂直弯曲比例×长度
         self.track_jitter = self.rng.uniform(0.5, 2.0)      # 轨迹抖动 px
 
-        # ---- 操作间隔（对数正态，中位 300~450ms）----
-        self.lat_mu = self.rng.uniform(float(np.log(300)), float(np.log(450)))
-        self.lat_sigma = self.rng.uniform(0.20, 0.40)
+        # ---- 操作间隔（对数正态，中位 180~260ms）----
+        self.lat_mu = self.rng.uniform(float(np.log(180)), float(np.log(260)))
+        self.lat_sigma = self.rng.uniform(0.15, 0.30)
 
         # ---- 菲茨定律移动时间 ----
         self.fitts_a = self.rng.uniform(0.05, 0.20)         # s
@@ -79,8 +79,8 @@ class HumanPolicy(Policy):
         # ---- 突发性：两态马尔可夫 ----
         self.burst_p_aa = self.rng.uniform(0.70, 0.95)
         self.burst_p_ii = self.rng.uniform(0.80, 0.97)
-        self.burst_active_dt = self.rng.uniform(0.10, 0.25)
-        self.burst_idle_dt = self.rng.uniform(1.0, 3.0)
+        self.burst_active_dt = self.rng.uniform(0.03, 0.10)
+        self.burst_idle_dt = self.rng.uniform(0.10, 0.25)
         self._burst_state = 'active'
 
         # ---- 疲劳 ----
