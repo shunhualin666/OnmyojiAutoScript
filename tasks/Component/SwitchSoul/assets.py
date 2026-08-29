@@ -29,6 +29,24 @@ class SwitchSoulAssets:
 	C_SOU_TEAM_SELECT = RuleClick(roi_front=(977,157,21,21), roi_back=(977,157,21,21), name="sou_team_select")
 
 
+	# Ocr Rule Assets
+	# 队伍预设分组 
+	O_SS_GROUP_NAME = RuleOcr(roi=(1087,91,155,566), area=(1110,94,116,533), mode="Full", method="Default", keyword="", name="ss_group_name")
+	# 阵容匹配 
+	O_SS_TEAM_NAME = RuleOcr(roi=(573,140,277,481), area=(667,144,32,475), mode="Full", method="Default", keyword="", name="ss_team_name")
+
+
+	# Swipe Rule Assets
+	# 列表的向上滑动 
+	S_SS_GROUP_SWIPE_UP = RuleSwipe(roi_front=(1154,180,90,21), roi_back=(1153,322,86,21), mode="default", name="ss_group_swipe_up")
+	# 列表的向下滑动 
+	S_SS_GROUP_SWIPE_DOWN = RuleSwipe(roi_front=(1155,388,21,22), roi_back=(1152,177,22,24), mode="default", name="ss_group_swipe_down")
+	# 阵容向上滑动 
+	S_SS_TEAM_SWIPE_UP = RuleSwipe(roi_front=(596,491,393,130), roi_back=(602,140,363,126), mode="default", name="ss_team_swipe_up")
+	# 阵容向上滑动 
+	S_SS_TEAM_SWIPE_DOWN = RuleSwipe(roi_front=(602,140,363,126), roi_back=(596,491,393,130), mode="default", name="ss_team_swipe_down")
+
+
 	# Image Rule Assets
 	# 退出式神录 
 	I_RECORD_SOUL_BACK = RuleImage(roi_front=(19,9,51,44), roi_back=(19,9,51,44), threshold=0.8, method="Template matching", file="./tasks/Component/SwitchSoul/ss/ss_record_soul_back.png")
@@ -66,23 +84,5 @@ class SwitchSoulAssets:
 	I_SOU_CLICK_PRESENT = RuleImage(roi_front=(978,304,25,26), roi_back=(965,142,48,480), threshold=0.9, method="Template matching", file="./tasks/Component/SwitchSoul/ss/ss_sou_click_present.png")
 	# 误触点到式神检查 
 	I_CHECK_BLOCK = RuleImage(roi_front=(572,408,137,49), roi_back=(572,408,137,49), threshold=0.8, method="Template matching", file="./tasks/Component/SwitchSoul/ss/ss_check_block.png")
-
-
-	# Ocr Rule Assets
-	# 队伍预设分组 
-	O_SS_GROUP_NAME = RuleOcr(roi=(1087,91,155,566), area=(1110,94,116,533), mode="Full", method="Default", keyword="", name="ss_group_name")
-	# 阵容匹配 
-	O_SS_TEAM_NAME = RuleOcr(roi=(573,140,277,481), area=(667,144,32,475), mode="Full", method="Default", keyword="", name="ss_team_name")
-
-
-	# Swipe Rule Assets
-	# 列表的向上滑动 
-	S_SS_GROUP_SWIPE_UP = RuleSwipe(roi_front=(1154,180,90,21), roi_back=(1153,322,86,21), mode="default", name="ss_group_swipe_up")
-	# 列表的向下滑动 
-	S_SS_GROUP_SWIPE_DOWN = RuleSwipe(roi_front=(1155,388,21,22), roi_back=(1152,177,22,24), mode="default", name="ss_group_swipe_down")
-	# 阵容向上滑动 
-	S_SS_TEAM_SWIPE_UP = RuleSwipe(roi_front=(782,406,21,21), roi_back=(793,356,21,21), mode="default", name="ss_team_swipe_up")
-	# 阵容向上滑动 
-	S_SS_TEAM_SWIPE_DOWN = RuleSwipe(roi_front=(709,308,21,21), roi_back=(709,449,21,21), mode="default", name="ss_team_swipe_down")
 
 

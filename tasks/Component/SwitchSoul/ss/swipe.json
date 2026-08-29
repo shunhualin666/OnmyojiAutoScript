@@ -15,15 +15,15 @@
   },
   {
     "itemName": "ss_team_swipe_up",
-    "roiFront": "782,406,21,21",
-    "roiBack": "793,356,21,21",
+    "roiFront": "596,491,393,130",
+    "roiBack": "602,140,363,126",
     "mode": "default",
     "description": "阵容向上滑动"
   },
   {
     "itemName": "ss_team_swipe_down",
-    "roiFront": "709,308,21,21",
-    "roiBack": "709,449,21,21",
+    "roiFront": "602,140,363,126",
+    "roiBack": "596,491,393,130",
     "mode": "default",
     "description": "阵容向上滑动"
   }
