@@ -53,12 +53,12 @@ def clip_to_region(region, px, py) -> Point:
     return int(min(max(px, x), hi_x)), int(min(max(py, y), hi_y))
 
 
-def point_region(x, y, w: int = 5, h: int = 5) -> Region:
-    """用左上角 (x, y) 和宽高 (w, h) 构造区域（ROI 语义）。
+def point_region(x, y, w: int = 8, h: int = 8) -> Region:
+    """以中心点 (x, y) 和宽高 (w, h) 构造区域（中心点语义）。
 
-    直接返回 (x, y, w, h)，不做坐标转换。
+    返回 (x - w//2, y - h//2, w, h)，区域中心精确落在 (x, y)。
     """
-    return int(x), int(y), int(w), int(h)
+    return int(x - w // 2), int(y - h // 2), int(w), int(h)
 
 
 def rule_region(rule) -> Region:
