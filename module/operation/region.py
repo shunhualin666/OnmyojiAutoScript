@@ -55,7 +55,17 @@ def point_region(x, y, radius: int = 3) -> Region:
 
 
 def rule_region(rule) -> Region:
-    """从规则对象取点击区域（优先 roi_front，其次 roi）。"""
+    """从规则对象取点击区域。
+
+    优先级：area（OCR 检测后的动态文字区域）> roi_front > roi。
+
+    注意：RuleOcr 的 self.area 在 ocr() 检测后会更新为实际文字框，
+    点击必须落在其上（而非静态搜索区域 roi），否则会点偏导致跳转失败。
+    """
+    # OCR 动态区域：ocr() 后 self.area 更新为实际文字框；仅 RuleOcr 有 area 属性
+    area = getattr(rule, 'area', None)
+    if area and len(area) >= 4:
+        return int(area[0]), int(area[1]), int(area[2]), int(area[3])
     roi = getattr(rule, 'roi_front', None)
     if roi and len(roi) >= 4:
         return int(roi[0]), int(roi[1]), int(roi[2]), int(roi[3])
