@@ -276,8 +276,8 @@ class SwitchSoul(BaseTask, SwitchSoulAssets):
         if not appear:
             return False
 
-        x1, y1 = target.coord()
-        x, y = action.coord()
+        x1, y1 = target.center()
+        x, y = action.center()
 
         self.act.click(point_region(x, y1), name=target.name)
         return True

@@ -89,7 +89,19 @@ class RuleOcr(Digit, DigitCounter, Duration, Single, Full, Quantity):
         x = np.random.randint(x, x + w)
         y = np.random.randint(y, y + h)
         return x, y
+    def center(self) -> tuple:
+        """
+        获取一个区域，返回区域的中心坐标
+        :return:
+        """
+        area = None
+        if self.mode == OcrMode.FULL:
+            area = self.area
+        else:
+            area = self.roi
 
+        x, y, w, h = area
+        return x + w // 2, y + h // 2
 
 if __name__ == "__main__":
     pass
