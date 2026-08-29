@@ -15,8 +15,9 @@ def region_center(region) -> Point:
     """区域中心，钳制到区域内（保证退化/越界区域也返回合法点）。"""
     x, y, w, h = region
     cx, cy = x + w / 2.0, y + h / 2.0
-    # 确保在区域内；w/h<=0（退化区域）时返回区域原点
-    return int(min(max(cx, x), x + w)), int(min(max(cy, y), y + h))
+    # ROI 语义 [x, x+w-1]：上限为 x+w-1；w/h<=0（退化区域）返回区域原点
+    hi_x, hi_y = x + max(0, w - 1), y + max(0, h - 1)
+    return int(min(max(cx, x), hi_x)), int(min(max(cy, y), hi_y))
 
 
 def region_random(region, rng=None) -> Point:
@@ -32,24 +33,27 @@ def region_normal(region, sigma_ratio: float = 1 / 6, rng=None) -> Point:
     rng = rng if rng is not None else np.random
     cx, cy = x + w / 2.0, y + h / 2.0
     sx, sy = max(1.0, w * sigma_ratio), max(1.0, h * sigma_ratio)
-    px = int(round(float(np.clip(rng.normal(cx, sx), x, x + w))))
-    py = int(round(float(np.clip(rng.normal(cy, sy), y, y + h))))
+    hi_x, hi_y = x + max(0, w - 1), y + max(0, h - 1)
+    px = int(round(float(np.clip(rng.normal(cx, sx), x, hi_x))))
+    py = int(round(float(np.clip(rng.normal(cy, sy), y, hi_y))))
     return px, py
 
 
 def region_contains(region, px, py) -> bool:
-    """点是否在区域内。"""
+    """点是否在区域内（ROI 语义 [x, x+w-1]）。"""
     x, y, w, h = region
-    return x <= px <= x + w and y <= py <= y + h
+    hi_x, hi_y = x + max(0, w - 1), y + max(0, h - 1)
+    return x <= px <= hi_x and y <= py <= hi_y
 
 
 def clip_to_region(region, px, py) -> Point:
-    """把点截断到区域内。"""
+    """把点截断到区域内（ROI 语义 [x, x+w-1]）。"""
     x, y, w, h = region
-    return int(min(max(px, x), x + w)), int(min(max(py, y), y + h))
+    hi_x, hi_y = x + max(0, w - 1), y + max(0, h - 1)
+    return int(min(max(px, x), hi_x)), int(min(max(py, y), hi_y))
 
 
-def point_region(x, y, w: int = 1, h: int = 1) -> Region:
+def point_region(x, y, w: int = 5, h: int = 5) -> Region:
     """用左上角 (x, y) 和宽高 (w, h) 构造区域（ROI 语义）。
 
     直接返回 (x, y, w, h)，不做坐标转换。

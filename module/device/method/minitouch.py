@@ -468,7 +468,7 @@ class Minitouch(Connection):
         # self.max_contacts = max_contacts
         self.max_x = int(max_x)
         self.max_y = int(max_y)
-        # self.max_pressure = max_pressure
+        self.max_pressure = int(max_pressure)
 
         # $ <pid>
         out = socket_out.readline().replace("\n", "").replace("\r", "")
@@ -566,6 +566,14 @@ class Minitouch(Connection):
         time.sleep(self.minitouch_builder.delay / 1000 + self.minitouch_builder.DEFAULT_DELAY)
         self.minitouch_builder.clear()
 
+    def _clamp_pressure(self, pressure: int | None) -> int:
+        """压力兜底并钳制到设备能力范围 [0, max_pressure]（扰动在范围内）。"""
+        p = int(pressure) if pressure is not None else 100
+        max_p = getattr(self, 'max_pressure', None)
+        if max_p:
+            p = int(min(max(p, 0), max_p))
+        return p
+
     @retry
     def click_minitouch(self, x, y, pressure=None, dwell=None, micro_move=None):
         """minitouch 点击，执行策略层下发的物理参数。
@@ -574,7 +582,7 @@ class Minitouch(Connection):
         保证任何调用都不出错；正常路径（拟人化启用）策略层保证传入有效值，兜底不可达。
         """
         builder = self.minitouch_builder
-        pressure = int(pressure) if pressure is not None else 100
+        pressure = self._clamp_pressure(pressure)
         dwell = int(dwell) if dwell is not None else 0
         if micro_move:
             mx, my = int(x) + micro_move[0], int(y) + micro_move[1]
@@ -592,7 +600,7 @@ class Minitouch(Connection):
         """minitouch 长按，执行策略层下发的按压压力（None 兜底到原生默认 100）。"""
         duration = int(duration * 1000)
         builder = self.minitouch_builder
-        pressure = int(pressure) if pressure is not None else 100
+        pressure = self._clamp_pressure(pressure)
         builder.down(x, y, pressure=pressure).commit().wait(duration)
         builder.up().commit()
         self.minitouch_send()
@@ -605,7 +613,7 @@ class Minitouch(Connection):
         """
         points = insert_swipe(p0=p1, p3=p2)
         builder = self.minitouch_builder
-        pressure = int(pressure) if pressure is not None else 100
+        pressure = self._clamp_pressure(pressure)
         delay = int(move_delay) if move_delay is not None else 10
 
         builder.down(*points[0], pressure=pressure).commit()
@@ -628,7 +636,7 @@ class Minitouch(Connection):
         p2 = np.array(p2) - random_rectangle_point(point_random)
         points = insert_swipe(p0=p1, p3=p2, speed=20)
         builder = self.minitouch_builder
-        pressure = int(pressure) if pressure is not None else 100
+        pressure = self._clamp_pressure(pressure)
         delay = int(move_delay) if move_delay is not None else 10
 
         builder.down(*points[0], pressure=pressure).commit()

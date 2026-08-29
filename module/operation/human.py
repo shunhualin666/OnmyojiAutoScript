@@ -134,10 +134,14 @@ class HumanPolicy(Policy):
         return float(1.0 / self.fatigue_factor())
 
     def drift(self) -> tuple[float, float]:
-        """低频 1/f 手部漂移（AR(1) 平滑随机游走）。"""
+        """低频 1/f 手部漂移（AR(1) 平滑随机游走），钳制在稳态 ±3σ 内。"""
         s = self.sigma_jitter * self.alpha_1f * 0.4
         self._drift_x = 0.92 * self._drift_x + self.rng.normal(0.0, s)
         self._drift_y = 0.92 * self._drift_y + self.rng.normal(0.0, s)
+        # 稳态 std = s / sqrt(1 - 0.92^2)；钳制 ±3σ，扰动不越界
+        limit = 3.0 * s / float(np.sqrt(1.0 - 0.92 ** 2))
+        self._drift_x = float(np.clip(self._drift_x, -limit, limit))
+        self._drift_y = float(np.clip(self._drift_y, -limit, limit))
         return self._drift_x, self._drift_y
 
     # ------------------------------------------------------------------
@@ -148,19 +152,20 @@ class HumanPolicy(Policy):
         cx, cy = R.region_center(region)
         x, y, w, h = region
         # 落点散布与目标尺寸相关（菲茨定律：目标越大越随意），
-        # σ ≈ 宽度/6（中心多、边缘少的正态散布）；w_e/4.133 作为最小散布下限
+        # x/y 各用各自方向 σ（长条区域不在窄方向过度散布）
         sigma_x = max(self.w_e / 4.133, w / 6.0)
         sigma_y = max(self.w_e / 4.133, h / 6.0)
-        s = max(sigma_x, sigma_y) * self.spread_factor()
-        px = cx + self.rng.normal(0.0, s)
-        py = cy + self.rng.normal(0.0, s)
+        spread = self.spread_factor()
+        sx, sy = sigma_x * spread, sigma_y * spread
+        px = cx + self.rng.normal(0.0, sx)
+        py = cy + self.rng.normal(0.0, sy)
         # 修正亚运动：25% 概率产生修正对准，更贴近中心但不过分集中
         if self.rng.random() < 0.25:
-            px = cx + self.rng.normal(0.0, s * 0.5)
-            py = cy + self.rng.normal(0.0, s * 0.5)
+            px = cx + self.rng.normal(0.0, sx * 0.5)
+            py = cy + self.rng.normal(0.0, sy * 0.5)
         # 手抖
-        px += self.rng.normal(0.0, self.sigma_jitter * self.spread_factor())
-        py += self.rng.normal(0.0, self.sigma_jitter * self.spread_factor())
+        px += self.rng.normal(0.0, self.sigma_jitter * spread)
+        py += self.rng.normal(0.0, self.sigma_jitter * spread)
         # 低频漂移
         dx, dy = self.drift()
         # 落点一定在区域内，再钳制到屏幕内（不越界）
@@ -187,12 +192,18 @@ class HumanPolicy(Policy):
         normal = normal / nl
         dist = float(np.linalg.norm(delta))
         envelope = np.sin(np.pi * t)[:, None]
-        bend = self.rng.normal(0.0, self.curve_bias * dist) * normal[None, :] * envelope
-        # 轨迹抖动（疲劳时更抖）
+        # 弯曲幅度有界：最多偏移 30% 距离（扰动在范围内）
+        bend_std = self.curve_bias * dist
+        bend_limit = max(1.0, 0.3 * dist)
+        bend = np.clip(self.rng.normal(0.0, bend_std) * normal[None, :] * envelope,
+                       -bend_limit, bend_limit)
+        # 轨迹抖动（疲劳时更抖），钳制到 ±3σ
         jitter = self.track_jitter * self.spread_factor()
+        jitter_limit = 3.0 * jitter
+        noise = np.clip(self.rng.normal(0.0, jitter, (len(path), 2)),
+                        -jitter_limit, jitter_limit)
         path = [(int(round(px + bx + jx)), int(round(py + by + jy)))
-                for (px, py), (bx, by), (jx, jy) in
-                zip(path, bend, self.rng.normal(0.0, jitter, (len(path), 2)))]
+                for (px, py), (bx, by), (jx, jy) in zip(path, bend, noise)]
         # 中间点全部钳制到屏幕内（不越界），首尾严格固定
         path = [self._clip_screen(px, py) for px, py in path]
         path[0] = a
@@ -298,9 +309,11 @@ class HumanPolicy(Policy):
         return int(round(float(self.rng.triangular(self.dwell_lo, self.dwell_peak, self.dwell_hi))))
 
     def micro_move_xy(self) -> tuple[int, int]:
-        """点击微动偏移（px）。"""
-        return (int(round(self.rng.normal(0.0, self.micro_move))),
-                int(round(self.rng.normal(0.0, self.micro_move))))
+        """点击微动偏移（px），钳制在 ±3σ 内（细微扰动不越界）。"""
+        mm = max(1.0, float(self.micro_move))
+        limit = int(round(3.0 * mm))
+        return (int(round(float(np.clip(self.rng.normal(0.0, mm), -limit, limit)))),
+                int(round(float(np.clip(self.rng.normal(0.0, mm), -limit, limit)))))
 
     def move_delay_ms(self) -> int:
         """滑动移动步间延迟（ms）。"""
