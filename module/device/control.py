@@ -132,8 +132,15 @@ class Control(Minitouch, Adb, Scrcpy, Window):
         logger.info(f'{self._format_action_duration(elapsed)}Click {point2str(x, y)} @ {control_name} {duration}')
 
     def swipe(self, p1, p2, duration=(0.1, 0.2), control_name='SWIPE', distance_check=True,
-              pressure=None, move_delay=None):
-        self.handle_control_check(control_name)
+              pressure=None, move_delay=None, control_check=True):
+        """滑动。
+
+        Args:
+            control_check: 是否触发防卡死检查；多段轨迹仅第一段为 True，
+                避免一次逻辑滑动被拆成多次 device 调用导致误判。
+        """
+        if control_check:
+            self.handle_control_check(control_name)
         p1, p2 = ensure_int(p1, p2)
         duration = ensure_time(duration)
         method = self.config.script.device.control_method
