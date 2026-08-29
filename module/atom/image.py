@@ -332,6 +332,13 @@ class RuleImage:
         x, y, w, h = self.roi_front
         return int(x + w//2), int(y + h//2)
 
+    def center(self) -> tuple:
+        """
+        获取 roi_front 的中心坐标（与 RuleOcr.center 语义一致，统一点击目标区域中心）
+        :return:
+        """
+        return self.front_center()
+
     def test_match(self, image: np.array):
         self.debug_mode = True
         if self.is_template_match:
