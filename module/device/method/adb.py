@@ -8,6 +8,7 @@ from adbutils.errors import AdbError
 from lxml import etree
 
 from module.base.decorator import Config
+from module.base.utils import ensure_int
 from module.device.connection import Connection
 from module.device.method.minitouch import smooth_path
 from module.device.method.utils import (RETRY_TRIES, retry_sleep, remove_prefix, handle_adb_error,
@@ -177,6 +178,8 @@ class Adb(Connection):
 
     @retry
     def click_adb(self, x, y):
+        # adb input 要求整数坐标（Integer.parseInt），float 会解析失败
+        x, y = ensure_int(x, y)
         start = time.time()
         self.adb_shell(['input', 'tap', x, y])
         if time.time() - start <= 0.05:
@@ -184,6 +187,7 @@ class Adb(Connection):
 
     @retry
     def swipe_adb(self, p1, p2, duration=0.1):
+        p1, p2 = ensure_int(p1, p2)
         duration = int(duration * 1000)
         self.adb_shell(['input', 'swipe', *p1, *p2, duration])
 
@@ -195,6 +199,7 @@ class Adb(Connection):
         :param duration: 单位是s
         :return:
         """
+        x, y = ensure_int(x, y)
         if not 0 < duration < 3:
             duration = duration / 1000
         self.adb_shell(['input', 'swipe', x, y, x, y, int(duration*1000)])

@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from module.base.decorator import cached_property, del_cached_property, has_cached_property
-from module.base.utils import ensure_time
+from module.base.utils import ensure_time, ensure_int
 from module.device.method.minitouch import insert_swipe, random_rectangle_point
 from module.device.method.utils import RETRY_TRIES, retry_sleep
 from module.exception import RequestHumanTakeover
@@ -513,6 +513,7 @@ class NemuIpc():
         return image
 
     def click_nemu_ipc(self, x, y):
+        x, y = ensure_int(x, y)
         down = ensure_time((0.010, 0.020))
         self.nemu_ipc.down(x, y)
         self.sleep(down)
@@ -520,6 +521,7 @@ class NemuIpc():
         self.sleep(0.050 - down)
 
     def long_click_nemu_ipc(self, x, y, duration=1.0):
+        x, y = ensure_int(x, y)
         self.nemu_ipc.down(x, y)
         self.sleep(duration)
         self.nemu_ipc.up()
