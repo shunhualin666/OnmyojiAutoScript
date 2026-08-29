@@ -608,8 +608,8 @@ class BaseTask(GlobalGameAssets, CostumeBase):
                 result = target.ocr_appear(self.device.image, name=name)
                 swipe_down = result is not None and isinstance(result, int) and result > 0
                 swipe_distance_ratio = 1
-            # 结果是坐标证明找到了, 非坐标都是没找到
-            if result is not None and isinstance(result, tuple):
+            # 结果是 RuleClick/坐标 证明找到了, 非坐标都是没找到
+            if result is not None and (isinstance(result, tuple) or isinstance(result, RuleClick)):
                 appear = True
                 break
             if swipe_distance_ratio:
@@ -635,10 +635,10 @@ class BaseTask(GlobalGameAssets, CostumeBase):
             if not self.interval_timer[target.name].reached():
                 return False
         appear = self.list_find(target, name=target.array[0], max_swipe=max_swipe)
-        if isinstance(appear, tuple) and interval:
-            # image 列表返回点击区域(4 元素)；ocr 列表返回坐标(2 元素)
-            if len(appear) == 4:
-                self.act.click(appear, name=target.name)
+        if appear and interval:
+            # image 列表返回 RuleClick；ocr 列表返回坐标点
+            if isinstance(appear, RuleClick):
+                self.click(appear, interval)
             else:
                 self.act.click(point_region(*appear), name=target.name)
             self.interval_timer[target.name].reset()

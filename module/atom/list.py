@@ -9,6 +9,7 @@ import numpy as np
 from random import randint
 
 from module.ocr.paddleocronnx import BoxedResult
+from module.atom.click import RuleClick
 from module.atom.ocr import RuleOcr
 from module.atom.image import RuleImage
 from module.image.rpc import get_image_client
@@ -138,20 +139,21 @@ class RuleList:
             self.targets[item] = RuleImage(roi_front=self.roi_back, roi_back=self.roi_back,
                                            method="Template matching", threshold=0.8, file=file)
 
-    def image_appear(self, image: np.array, name: str, frame_id: str = None) -> bool | tuple:
+    def image_appear(self, image: np.array, name: str, frame_id: str = None) -> bool | RuleClick:
         """
         判断是否出现了某个图片
         :param image: 屏幕的截图
         :param name:
-        :return: 如果在当前的显示中，返回可以点击的区域 (x, y, w, h)；
+        :return: 如果出现，返回可点击的 RuleClick（携带目标实际区域）；
                  如果没出现则返回 False
         """
         if self.is_image and isinstance(name, str):
             self.target_check(name)
             appear = self._target.match(image, frame_id=frame_id)
             if appear:
-                # 返回点击区域：match 后 roi_front 已更新为目标实际位置
-                return tuple(self._target.roi_front)
+                # 返回点击目标：match 后 roi_front 已更新为目标实际位置
+                region = tuple(self._target.roi_front)
+                return RuleClick(roi_front=region, roi_back=region, name=name)
             else:
                 return False
         elif self.is_image and isinstance(name, list):
@@ -164,8 +166,9 @@ class RuleList:
             )
             for rule, result in zip(rules, results):
                 if rule._apply_match_result(result):
-                    # 返回点击区域：匹配后 roi_front 为目标实际位置
-                    return tuple(rule.roi_front)
+                    # 返回点击目标：匹配后 roi_front 为目标实际位置
+                    region = tuple(rule.roi_front)
+                    return RuleClick(roi_front=region, roi_back=region, name=rule.name)
             return False
 
         else:
