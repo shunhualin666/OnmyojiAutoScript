@@ -15,22 +15,22 @@
   },
   {
     "itemName": "swipe_background_right",
-    "roiFront": "1093,148,21,21",
-    "roiBack": "397,140,21,21",
+    "roiFront": "939,110,258,296",
+    "roiBack": "88,118,244,272",
     "mode": "default",
     "description": "往左滑动"
   },
   {
     "itemName": "swipe_background_left",
-    "roiFront": "420,142,21,21",
-    "roiBack": "1183,146,21,21",
+    "roiFront": "88,118,244,272",
+    "roiBack": "939,110,258,296",
     "mode": "default",
     "description": "往右滑动"
   },
   {
     "itemName": "swipe_shiki_to_left",
-    "roiFront": "890,587,21,21",
-    "roiBack": "351,584,21,21",
+    "roiFront": "909,514,101,153",
+    "roiBack": "172,507,122,168",
     "mode": "default",
     "description": "滑动狗粮选择界面"
   },
